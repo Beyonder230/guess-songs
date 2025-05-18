@@ -1,0 +1,77 @@
+.custom-navbar {
+    border-bottom: 15px solid #81b71a;
+    border-left: 5px solid #81b71a;
+    border-right: 5px solid #81b71a;
+    min-height: 200px;
+}
+
+.custom-navbar .container-fluid {
+    height: 200px;
+    align-items: center;
+}
+
+.navbar-brand {
+    text-decoration: underline !important;
+    text-decoration-color: #81b71a !important;
+    font-size: 40px !important;
+}
+
+.navbar-nav .nav-link,
+.navbar-brand {
+    font-family: sans-serif;
+}
+
+.btn-green {
+    background-color: #81b71a !important;
+}
+
+.footer {
+    position: fixed;
+    width: 100%;
+    color: white;
+    background-color: rgb(15, 15, 15);
+    bottom: 0;
+    border-top: 10px solid #81b71a;
+    text-align: center;
+}
+
+.link {
+    color: #81b71a;
+}
+
+.box {
+    border: 5px solid black;
+}
+
+.text {
+    margin: 0 auto;
+    text-align: justify;
+    padding: 20px;
+    line-height: 1.6;
+    max-width: 800px;
+    font-family: sans-serif;
+}
+
+.center {
+    text-align: center;
+}
+
+#config-button {
+    text-align: right !important;
+    margin: 30px !important;
+}
+
+.floating-form {
+    position: fixed;
+    display: none;
+    top: 50%;
+    left: 50%;
+    min-width: 33%;
+    min-height: 33%;
+    background-color: white;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    border-radius: 0.5rem;
+    z-index: 1000;
+    border: 2px solid #81b71a;
+}

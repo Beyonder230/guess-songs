@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block main %}
+
+<div class="text-center" style="margin-top: 5%;">
+    <h1>Music player</h1>
+    <audio controls>
+        <source src="{{music}}" type="audio/mpeg">
+    </audio>
+
+    <p>Score: 0</p>
+    <p>Biggest score: {{bigger_score}}</p>
+</div>
+
+{% endblock %}
