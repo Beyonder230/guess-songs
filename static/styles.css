@@ -75,3 +75,8 @@
     z-index: 1000;
     border: 2px solid #81b71a;
 }
+
+.options {
+    display: inline-block !important;
+    padding: 10px !important;
+}
