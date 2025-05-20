@@ -29,36 +29,55 @@ def get_access():
         print("Token generating error", response_data)
         return None
 
-def get_random_track(playlist_id, access):
+def get_random_track(playlist_url, access):
     # http info
-    url = f"https://api.spotify.com/v1/playlists/{playlist_id}"
+    if "spotify" in playlist_url:
+        playlist_id = get_id_from_url(playlist_url, "playlist")
+        if playlist_id == None:
+            return "Wrong playlist"
+        url = f"https://api.spotify.com/v1/playlists/{playlist_id}"
+    elif "deezer" in playlist_url:
+        playlist_id = get_id_from_url(playlist_url, "playlist")
+        if playlist_id == None:
+            return "Wrong playlist"
+        url = f"https://api.deezer.com/playlist/{playlist_id}"
+        
     header = {
         "Authorization": f"Bearer {access}",
         "Content-Type": "application/json"
         }
     
-    # trying to make a get resquest for playlist
-    playlist_response = requests.get(url, headers=header)
-    print(f"playlist_response variable: {playlist_response}")
-    
     # trying to get the tracks of this playlist
-    tracks_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-    print(f"called URL: https://api.spotify.com/v1/playlists/{playlist_id}/tracks")
-    tracks_response = requests.get(tracks_url, headers=header)
+    tracks_url = url + "/tracks"
+    print(f"called URL: {tracks_url}")
+    
+    if "spotify" in playlist_url:
+        tracks_response = requests.get(tracks_url, headers=header)
+    if "deezer" in playlist_url:
+         tracks_response = requests.get(tracks_url)
     tracks = tracks_response.json()
+    
     print(f"tracks json: {tracks}")
     
     if "error" in tracks:
         return "error"
     
-    total_tracks = len(tracks["items"])
     checked_tracks = 0
-    while checked_tracks < total_tracks:
-        random_track = random.choice(tracks["items"])
-        if random_track["track"]["preview_url"] != None:
-            return random_track
-        checked_tracks += 1
-        
+    if "spotify" in playlist_url:
+        total_tracks = len(tracks["items"])
+        while checked_tracks < total_tracks:
+            random_track = random.choice(tracks["items"])
+            if random_track["track"]["preview_url"] != None:
+                return random_track
+            checked_tracks += 1
+    elif "deezer" in playlist_url:
+        total_tracks = len(tracks["data"])
+        while checked_tracks < total_tracks:
+            random_track = random.choice(tracks["data"])
+            if random_track["preview"] != None:
+                return random_track
+            checked_tracks += 1
+ 
     return "There's no elligible track in the playlist"
     # currently this is an simple version of the function bc its only consider the first 50 tracks (ok for the top 50 global default playlist)
     
@@ -71,7 +90,54 @@ def get_id_from_url(url, type):
 
 def test_access(access_token):
     playlist_id = "09tJur2DIOM35bqoVXDjgw"
-    url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"  # Sem /tracks no final
+    url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
     headers = {"Authorization": f"Bearer {access_token}"}
     response = requests.get(url, headers=headers)
-    print(response.status_code, response.json())  # Deve retornar 200 se a playlist for pública
+    print(response.status_code, response.json())
+    
+def get_options(playlist_url, base_song):
+    print("=" * 200)
+    print("BASE SONG:")
+    print(base_song)
+    print("=" * 200)
+    if "spotify" in playlist_url:
+        base_img = base_song["track"]["album"]["images"]["url"]
+        base_title = base_song["track"]["name"]
+    elif "deezer" in playlist_url:
+        base_img = base_song["album"]["cover_medium"]
+        base_title = base_song["title"]
+        
+    options = []
+    song = {"title": base_title, "img": base_img, "correct_answer": True}
+    options.append(song)
+    
+    token = get_access()
+    if token == None:
+        return "auth error"
+    
+    while len(options) < 4:
+        track = get_random_track(playlist_url, token)
+        if "spotify" in playlist_url:
+            img_url = track["track"]["album"]["images"]["url"]
+            if not check_dict_list(options, "img", img_url):
+                title = track["track"]["name"]
+                song = {"title": title,"img": img_url, "correct_answer": False}
+                options.append(song)
+        elif "deezer" in playlist_url:
+            img_url = track["album"]["cover_medium"]
+            if not check_dict_list(options, "img", img_url):
+                title = track["title"]
+                song = {"title": title,"img": img_url, "correct_answer": False}
+                options.append(song)
+            
+    if len(options) < 4:
+        return "error"
+    else:
+        shuffled_options = random.sample(options, len(options))
+        return shuffled_options
+    
+def check_dict_list(list, key, element):
+    for dict in list:
+        if key in dict and element in dict[key]:
+            return True
+    return False

@@ -3,13 +3,36 @@
 {% block main %}
 
 <div class="text-center" style="margin-top: 5%;">
-    <h1>Music player</h1>
-    <audio controls>
-        <source src="{{music}}" type="audio/mpeg">
+    <h1>???</h1>
+    <audio controls id="song">
+        <source src="{{song}}" type="audio/mpeg">
     </audio>
 
-    <p>Score: 0</p>
-    <p>Biggest score: {{bigger_score}}</p>
 </div>
 
+<div class="d-flex justify-content-center gap-5" style="margin-top: 3%;">
+
+    {% for option in options %}
+
+    <div class="text-center">
+        <img class="rounded img-fluid d-inline-block me-2" src="{{option["img"]}}" width="250" height="250">
+        <p>{{option["title"]}}</p> 
+    </div>
+
+    {% endfor %}
+
+</div>
+
+
+<div class="d-flex justify-content-center">
+    <div class="rounded border border-dark p-3" style="max-width: 300px;">
+        <p>Score: 0</p>
+        <p>Biggest score: {{bigger_score}}</p>
+    </div>
+</div>
+
+<script>
+    const audio = document.getElementById("song");
+    audio.volume = 0.15;
+</script>
 {% endblock %}
