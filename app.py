@@ -19,7 +19,7 @@ def howthegameworks():
 def play():
     return render_template("gamemodes.html")
 
-@app.route('/singleplayer', methods=["POST"])
+@app.route('/singleplayer', methods=["GET", "POST"])
 def singleplayer():
     if "singleplayer_score" not in session:
         session.permanent = True
@@ -29,6 +29,7 @@ def singleplayer():
     if token == None:
         return "auth error"
     
+    # default playlist for this gamemode
     playlist_url = "https://www.deezer.com/br/playlist/4461060364"
     
     # test_access(token)
@@ -37,16 +38,21 @@ def singleplayer():
     if track == "error":
         return redirect("/error")
     
+    # get info about the answer options
     options = get_options(playlist_url, track)
     print(f"return of get_options(): {options}")
     if options == "error":
         return redirect("/error")
     
-    return render_template("singleplayer.html", bigger_score = session["singleplayer_score"], song = track["preview"], options = options)
+    return render_template("game.html", bigger_score = session["singleplayer_score"], song = track, options = options)
 
 @app.route("/error")
 def error():
     return render_template("error.html")
+
+@app.route("/attributions")
+def attributions():
+    return render_template("attributions.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -31,7 +31,7 @@
     color: white;
     background-color: rgb(15, 15, 15);
     bottom: 0;
-    border-top: 10px solid #81b71a;
+    border-top: 7px solid #81b71a;
     text-align: center;
 }
 
@@ -45,7 +45,7 @@
 
 .text {
     margin: 0 auto;
-    text-align: justify;
+    text-align: center;
     padding: 20px;
     line-height: 1.6;
     max-width: 800px;
@@ -76,7 +76,23 @@
     border: 2px solid #81b71a;
 }
 
-.options {
-    display: inline-block !important;
-    padding: 10px !important;
+.options:hover {
+    cursor: pointer;
+}
+
+.img-container {
+    width: 250px;
+    height: 250px;
+    position: relative;
+}
+
+.answer {
+    z-index: 1;
+}
+
+.check {
+    top: 50px;
+    left: 50px;
+    width: 50%;
+    z-index: 2;
 }
