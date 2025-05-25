@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+
+{% block main %}
+<script>
+    let answered = false;
+
+    function mark_answers() {
+
+        const correct_answer = "True";
+        let div;
+
+        {% for option in options %}
+        var img = document.createElement("img");
+        div = document.getElementById("{{ option["title"] | safe }}");
+
+        if (correct_answer == "{{option["correct_answer"]}}") {
+            img.src = "/static/check.png";
+        }
+        else {
+            img.src = "/static/delete.png";
+        }
+        
+        img.class = "check"
+        div.appendChild(img);
+
+        {% endfor %}
+    }
+
+    function check_answer(object) {
+        if (answered) {
+            return;
+        }
+        answered = true;
+
+        {% for option in options %}
+        {% if option["correct_answer"] %}
+        let correct_image = "{{option["img"]}}";
+        {% endif %}
+        {% endfor %}
+
+        if (object.src == correct_image) {
+            console.log("correct answer")
+            let score = document.getElementById("current_score").innerText;
+            score = score.split(" ");
+            score = score[score.length - 1];
+            score = parseInt(score) + 1;
+            text = "Score: " + score.toString();
+            document.getElementById("current_score").innerText = text;
+
+            if (score > {{bigger_score}}) {
+                document.getElementById("biggest_score").innerText = "Biggest score: " + score.toString();
+            }
+        }
+        else {
+            console.log("wrong answer");
+        }
+        mark_answers();
+    }
+</script>
+
+<div class="text-center" style="margin-top: 5%;">
+    <h1>???</h1>
+    <audio controls id="song">
+        <source src="{{song["preview"]}}" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const audio = document.getElementById("song");
+        audio.volume = 0.15;
+    </script>
+</div>
+
+<div class="d-flex justify-content-center gap-5" style="margin-top: 3%;">
+
+    {% for option in options %}
+
+    <div id="{{ option["title"] | safe }}" class="text-center">
+        <div class="img-container">
+            <img class="options rounded img-fluid d-inline-block me-2 shadow answer" src="{{option["img"]}}" onclick="check_answer(this)">
+        </div>
+        <p>{{ option["title"] }}</p> 
+    </div>
+
+    {% endfor %}
+
+</div>
+
+
+<div class="d-flex justify-content-center">
+    <div class="rounded border border-dark p-3" style="max-width: 300px;">
+        <p id="current_score">Score: 0</p>
+        <p id="biggest_score">Biggest score: {{bigger_score}}</p>
+    </div>
+</div>
+{% endblock %}
