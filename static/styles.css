@@ -84,15 +84,25 @@
     width: 250px;
     height: 250px;
     position: relative;
+    display: inline-block;
 }
 
-.answer {
-    z-index: 1;
+.img-answer {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    position: absolute;
+    z-index: 5;
 }
 
-.check {
-    top: 50px;
-    left: 50px;
-    width: 50%;
-    z-index: 2;
+.img-check {
+    position: absolute;
+    top: 5%;
+    right: 5%;
+    width: 30%;
+    height: 30%;
+    left: auto;
+    z-index: 10;
 }
