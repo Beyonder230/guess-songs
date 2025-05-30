@@ -8,22 +8,30 @@
 
         const correct_answer = "True";
         let div;
+        var originalImg;
+        var imgContainerDiv;
+        let correct_title;
 
         {% for option in options %}
         var img = document.createElement("img");
         div = document.getElementById("{{ option["title"] | safe }}");
 
         if (correct_answer == "{{option["correct_answer"]}}") {
+            correct_title = "{{option["title"] | safe}}";
             img.src = "/static/check.png";
         }
         else {
             img.src = "/static/delete.png";
         }
-        
-        img.class = "check"
-        div.appendChild(img);
+
+        imgContainerDiv = div.querySelector(".img-container");
+        originalImg = imgContainerDiv.querySelector(".options");
+        img.classList.add("img-check")
+        imgContainerDiv.insertBefore(img, originalImg);
 
         {% endfor %}
+
+        document.getElementById("questions").innerText = correct_title;
     }
 
     function check_answer(object) {
@@ -50,16 +58,39 @@
             if (score > {{bigger_score}}) {
                 document.getElementById("biggest_score").innerText = "Biggest score: " + score.toString();
             }
+
+            mark_answers();
+
+            // right answer redirect 
+            let title = document.getElementById("questions").innerText;
+
+            /*
+            const score_json = {
+                currect_title: title,
+                current_score: score,
+                lose: false
+            };
+            */
+
+            // countdown(2);
+            setTimeout(function() {
+                window.location.reload();
+            }, 2000);
+            // ===========================
         }
         else {
             console.log("wrong answer");
+            mark_answers();
+            // countdown(2);
+            setTimeout(function() {
+                window.location.href = "/gamemodes"
+            }, 2000);
         }
-        mark_answers();
     }
 </script>
 
 <div class="text-center" style="margin-top: 5%;">
-    <h1>???</h1>
+    <h1 id="questions">???</h1>
     <audio controls id="song">
         <source src="{{song["preview"]}}" type="audio/mpeg">
     </audio>
@@ -76,19 +107,16 @@
 
     <div id="{{ option["title"] | safe }}" class="text-center">
         <div class="img-container">
-            <img class="options rounded img-fluid d-inline-block me-2 shadow answer" src="{{option["img"]}}" onclick="check_answer(this)">
+            <img class="options rounded img-fluid d-inline-block me-2 shadow img-answer" src="{{option["img"]}}" onclick="check_answer(this)">
         </div>
         <p>{{ option["title"] }}</p> 
     </div>
-
     {% endfor %}
-
 </div>
-
 
 <div class="d-flex justify-content-center">
     <div class="rounded border border-dark p-3" style="max-width: 300px;">
-        <p id="current_score">Score: 0</p>
+        <p id="current_score">Score: {{score}}</p>
         <p id="biggest_score">Biggest score: {{bigger_score}}</p>
     </div>
 </div>

@@ -1,6 +1,10 @@
 import requests
 import random
 import base64
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_access():
     url = "https://accounts.spotify.com/api/token"
