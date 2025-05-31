@@ -106,3 +106,43 @@
     left: auto;
     z-index: 10;
 }
+
+.gamemodes-options {
+    border-style: groove;
+    border-color: black;
+    border-radius: 1px;
+    background-color: gainsboro;
+
+    max-width: 700px;
+    margin: 5% auto 0 auto;
+    padding: 70px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.gamemodes-buttons .btn {
+    text-align: center;
+    background-color: #8BC34A;
+    border-color: #8BC34A;
+    color: white !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    padding: 7%;
+}
+
+.gamemodes-buttons .btn:hover:not(.disabled) {
+    background-color: #7CB342;
+    border-color: #7CB342;
+}
+
+#custom_game_button {
+    text-align: center;
+        background-color: #8BC34A;
+        border-color: #8BC34A;
+        color: white !important;
+        font-weight: bold;
+        text-transform: uppercase;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+}

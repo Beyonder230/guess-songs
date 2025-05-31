@@ -4,7 +4,7 @@
 <script>
     let answered = false;
 
-    function mark_answers() {
+    function mark_answers(object) {
 
         const correct_answer = "True";
         let div;
@@ -19,6 +19,7 @@
         if (correct_answer == "{{option["correct_answer"]}}") {
             correct_title = "{{option["title"] | safe}}";
             img.src = "/static/check.png";
+
         }
         else {
             img.src = "/static/delete.png";
@@ -40,6 +41,8 @@
         }
         answered = true;
 
+        object.style.border = "thick solid black";
+
         {% for option in options %}
         {% if option["correct_answer"] %}
         let correct_image = "{{option["img"]}}";
@@ -59,7 +62,7 @@
                 document.getElementById("biggest_score").innerText = "Biggest score: " + score.toString();
             }
 
-            mark_answers();
+            mark_answers(object);
 
             // right answer redirect 
             let title = document.getElementById("questions").innerText;
@@ -74,16 +77,22 @@
 
             // countdown(2);
             setTimeout(function() {
-                window.location.reload();
+                {% if gamemode == "custom" %}
+                let originalUrl = "{{url}}";
+                let url = encodeURIComponent(originalUrl);
+                window.location.href = "/score_update/{{gamemode}}/" + url
+                {% else %}
+                window.location.href = "/score_update/{{gamemode}}"
+                {% endif %}
             }, 2000);
             // ===========================
         }
         else {
             console.log("wrong answer");
-            mark_answers();
+            mark_answers(object);
             // countdown(2);
             setTimeout(function() {
-                window.location.href = "/gamemodes"
+                window.location.href = "/score_reset/{{gamemode}}"
             }, 2000);
         }
     }
