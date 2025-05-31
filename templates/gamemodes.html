@@ -2,35 +2,73 @@
 
 {% block main %}
 
+<!--
 <div class="d-flex justify-content-end m-3">
     <button type="button" id="config-button" class="btn btn-outline-dark fw-bold px-5 py-3 fs-5" onclick="openConfig();">
         <img src="/static/gear.svg" width="30" height="30">
         SETTINGS
     </button>
 </div>
+-->
 
-<div class="text-center" style="margin-top: 80px;">
-    <h1>Gamemodes:</h1>
+<div class="gamemodes-options" style="margin-top: 5%;">
+
+    <h1 class="text-center mb-4">Gamemodes:</h1>
+
+    <div class="d-flex flex-column align-items-center justify-content-center gap-5 mb-3 gamemodes-buttons">
+        <form class="w-100" action="/score_reset/singleplayer" method="POST" style="max-width: 50%;">
+            <button type="submit" class="btn btn-green w-100">
+                <img src="/static/singleplayer.png">    SINGLEPLAYER
+            </button>
+         </form>
+
+        <form class="w-100" style="max-width: 50%;">
+            <button type="submit" class="btn btn-green w-100 disabled">
+                <img src="/static/multiplayer.png">    MULTIPLAYER
+            </button>
+        </form>
+
+        <form class="w-100" style="max-width: 50%;">
+            <button type="button" class="btn btn-green w-100" onclick="openCustom();">
+                <img src="/static/custom.png">    CUSTOM
+            </button>
+        </form>
+        
+    </div>
+
 </div>
 
-<div class="text-center" style="margin-top: 50px">
-    <form action="/singleplayer" method="GET">
-        <input type="submit" style="color: white;" class="btn btn-green fw-bold px-5 py-3 fs-5 me-4" href="/singleplayer" role="button" value="SINGLEPLAYER">
-        <input type="submit" style="color: white;" class="btn btn-green disabled fw-bold px-5 py-3 fs-5 me-4" href="/gamemodes" role="button" value="MULTIPLAYER">
-        <input type="submit" style="color: white;" class="btn btn-green disabled fw-bold px-5 py-3 fs-5" href="/gamemodes" role="button" value="CUSTOM">
-    </form>
-</div>
-
+<!--
 <div id="settings" class="floating-form shadow-lg">
     <div class="d-flex justify-content-end m-3">
         <button type="button" class="btn-close" aria-label="Close" onclick="closeConfig()"></button>
     </div>
     
-    <h2 style="text-align: center;">SETTINGS</h3>
+    <h2 style="text-align: center;">SETTINGS</h2>
     <div style="margin-top: 10px;" class="form-check form-switch">
         <input class="form-check-input" type="checkbox" role="switch" id="switchCheckChecked" checked>
         <label class="form-check-label" for="switchCheckChecked">Safe mode</label>
     </div>
+</div>
+-->
+
+<div id="custom" class="floating-form shadow-lg">
+
+    <div class="d-flex justify-content-end m-3">
+        <button type="button" class="btn-close" aria-label="Close" onclick="closeCustom();"></button>
+    </div>
+    
+    <h2 style="text-align: center;">CUSTOM GAMEMODE</h2>
+
+    <form action="/score_reset/custom" method="post">
+        <label for="url">Playlist URL:</label><br>
+        <input type="text" id="url" name="url" class="w-100" placeholder="https://open.spotify.com/playlist/37i9dQZEVXbMDoHDwVN2tF?si=sWF-9j8bRsK56xv8b04LXQ" required><br><br>
+
+        <button id="custom_game_button" type="submit" class="btn btn-green w-100">
+            START
+        </button>
+    </form>
+
 </div>
 
 {% endblock %}
