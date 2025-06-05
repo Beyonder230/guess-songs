@@ -4,6 +4,10 @@
 <script>
     let answered = false;
 
+    function gameover() {
+        document.getElementById("gameover").style.display = "block";
+    }
+
     function mark_answers(object) {
 
         const correct_answer = "True";
@@ -91,18 +95,26 @@
             console.log("wrong answer");
             mark_answers(object);
             // countdown(2);
-            setTimeout(function() {
-                window.location.href = "/score_reset/{{gamemode}}"
-            }, 2000);
+            setTimeout(gameover, 2000);
         }
     }
 </script>
 
-<div class="text-center" style="margin-top: 5%;">
+<div class="text-center" style="margin-top: 3%;">
     <h1 id="questions">???</h1>
-    <audio controls id="song">
-        <source src="{{song["preview"]}}" type="audio/mpeg">
-    </audio>
+
+    <div class="justify-content-center">
+        <div>
+            <audio controls id="song">
+                <source src="{{song["preview"]}}" type="audio/mpeg">
+            </audio>
+        </div>
+
+        <div>
+            <img src="/static/time.png" height="64" width="64"></img>
+            <h2 id="time"></h2>
+        </div>
+    </div>
 
     <script>
         const audio = document.getElementById("song");
@@ -126,7 +138,43 @@
 <div class="d-flex justify-content-center">
     <div class="rounded border border-dark p-3" style="max-width: 300px;">
         <p id="current_score">Score: {{score}}</p>
-        <p id="biggest_score">Biggest score: {{bigger_score}}</p>
+        <p id="biggest_score">Top score: {{bigger_score}}</p>
     </div>
 </div>
+
+
+<div id="gameover" class="floating-form shadow-lg">
+
+    <h2 style="text-align: center; color: red;">GAMEOVER</h2><br><br>
+
+    <div class="d-flex flex-column align-items-center justify-content-around gap-3 mb-3">
+
+        <!--  changed  -->
+        <div class="d-flex flex-column text-center" style="width: 50%;">
+            <form class="d-flex flex-column w-100" style="text-align: center;" action="/score_reset/{{gamemode}}" method="post">
+                
+                <input type="hidden" id="url" name="url" value="{{url}}">
+
+                <button id="play_again_button" type="submit" class="btn btn-green w-100" style="color: white;">
+                    PLAY AGAIN
+                </button>
+            </form>
+        </div>
+
+        <div class="d-flex flex-column text-center" style="width: 50%;">
+
+            <form class="d-flex flex-column w-100" style="text-align: center;" action="/score_reset/{{gamemode}}" method="get">
+                
+
+                <button id="return_button" type="submit" class="btn btn-green w-100" style="color: white;">
+                    RETURN TO MENU
+                </button>
+            </form>
+        </div>
+
+
+    </div>
+
+</div>
+
 {% endblock %}

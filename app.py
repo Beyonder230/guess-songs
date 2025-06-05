@@ -138,6 +138,7 @@ def score_reset(gamemode):
 def custom(url): 
     url = urllib.parse.unquote_plus(url)
     
+    # session score
     if "best_custom_score" not in session:
         session.permanent = True
         session["best_custom_score"] = 0
@@ -146,19 +147,15 @@ def custom(url):
 
     if session["custom_score"] > session["best_custom_score"]:
         session["best_custom_score"] = session["custom_score"]
-     
-    if "spotify" in url:
-        token = get_access()
-        if token == None:
-            return "auth error"
     
+    # selecting a random track
     if "spotify" in url:
-        track = get_random_spotify_track(url, token)
+        track = get_random_spotify_track(url)
     elif "deezer" in url:
         track = get_random_deezer_track(url)
     else:
-        print(f"url: {url}")
-        return redirect("/error") # temporary!!!!!!
+        print(f"error in selecting a random track / url: {url}")
+        return redirect("/error")
         
     # print(f"return of get_random_track(): {track}")
     if track == "error":
@@ -170,8 +167,8 @@ def custom(url):
     elif "deezer" in url:
         options = get_deezer_options(url, track)
     else:
-        print(f"url: {url}")
-        return redirect("/error") # temporary!!!!!!
+        print(f"error in getting options / url: {url}")
+        return redirect("/error")
 
     # print(f"return of get_options(): {options}")
     if options == "error":
