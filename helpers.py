@@ -163,7 +163,11 @@ def check_dict_list(list, key, element):
 
 
 
-def get_random_spotify_track(url, access):
+def get_random_spotify_track(url):
+    # spotify authentification
+    access = get_access()
+    if access == None:
+        return "auth error"
     # http info
     id = get_id_from_url(url, "playlist")
     if id == None:
@@ -228,7 +232,7 @@ def get_random_deezer_track(url):
     total_tracks = len(tracks["data"])
     while checked_tracks < total_tracks:
         random_track = random.choice(tracks["data"])
-        if random_track["preview"] != None:
+        if random_track["preview"] != "":
             return random_track
         checked_tracks += 1
  

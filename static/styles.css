@@ -33,6 +33,7 @@
     bottom: 0;
     border-top: 7px solid #81b71a;
     text-align: center;
+    z-index: 1001;
 }
 
 .link {
