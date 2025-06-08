@@ -54,8 +54,10 @@ def singleplayer():
     # print(f"return of get_options(): {options}")
     if options == "error":
         return redirect("/error")
+    
+    time = 15
 
-    return render_template("game.html", bigger_score = session["best_singleplayer_score"], song = track, options = options, score = session["singleplayer_score"], gamemode = "singleplayer")
+    return render_template("game.html", bigger_score = session["best_singleplayer_score"], song = track, options = options, score = session["singleplayer_score"], gamemode = "singleplayer", time=time)
 
 
 
@@ -74,8 +76,8 @@ def attributions():
 
 
 
-@app.route("/score_update/custom/<path:url>")
-def score_custom(url):
+@app.route("/score_update/custom/<path:url>/<int:time>")
+def score_custom(url, time):
     mode_score = "custom_score"
     
     if mode_score not in session:
@@ -86,7 +88,7 @@ def score_custom(url):
 
     url = urllib.parse.quote_plus(url, safe='')
         
-    return redirect(url_for("custom", url=url))
+    return redirect(url_for("custom", url=url, time=time))
     
     
     
@@ -123,19 +125,26 @@ def score_reset(gamemode):
         return redirect("/gamemodes")
     elif request.method == "POST":
         if gamemode == "custom":
+            time = request.form.get("time")
+            try:
+                time = int(time)
+            except:
+                print("Validation error: time variable is not a integer")
+                return redirect("/error")
+            
             url = request.form.get("url")
             url = urllib.parse.quote_plus(url, safe='')
             
             print(f"url: {url}")
-            return redirect(url_for(gamemode, url=url))
+            return redirect(url_for(gamemode, url=url, time=time))
         else:
             return redirect(url_for(gamemode))
         
         
         
         
-@app.route("/custom/<string:url>", methods=["GET", "POST"])
-def custom(url): 
+@app.route("/custom/<string:url>/<int:time>", methods=["GET", "POST"])
+def custom(url, time):    
     url = urllib.parse.unquote_plus(url)
     
     # session score
@@ -174,7 +183,7 @@ def custom(url):
     if options == "error":
         return redirect("/error")
 
-    return render_template("game.html", bigger_score = session["best_custom_score"], song = track, options = options, score = session["custom_score"], gamemode = "custom", url=url)
+    return render_template("game.html", bigger_score = session["best_custom_score"], song = track, options = options, score = session["custom_score"], gamemode = "custom", url=url, time=time)
 
 if __name__ == "__main__":
     app.run(debug=True)

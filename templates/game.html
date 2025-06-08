@@ -3,9 +3,27 @@
 {% block main %}
 <script>
     let answered = false;
+    let played = false;
 
     function gameover() {
         document.getElementById("gameover").style.display = "block";
+    }
+
+    function countdown(time) {
+        let timer = document.getElementById("time");
+        timer.innerText = time.toString();
+
+        interval = setInterval(function() {
+            if (time <= 0) {
+                answered = true;
+                gameover();
+                clearInterval(interval);
+                return;
+            }
+
+            time--;
+            timer.innerText = time.toString();
+        }, 1000);
     }
 
     function mark_answers(object) {
@@ -44,6 +62,7 @@
             return;
         }
         answered = true;
+        clearInterval(interval);
 
         object.style.border = "thick solid black";
 
@@ -83,8 +102,9 @@
             setTimeout(function() {
                 {% if gamemode == "custom" %}
                 let originalUrl = "{{url}}";
+                let time = {{time}};
                 let url = encodeURIComponent(originalUrl);
-                window.location.href = "/score_update/{{gamemode}}/" + url
+                window.location.href = "/score_update/{{gamemode}}/" + url + "/" + time.toString()
                 {% else %}
                 window.location.href = "/score_update/{{gamemode}}"
                 {% endif %}
@@ -93,11 +113,23 @@
         }
         else {
             console.log("wrong answer");
+            clearInterval(interval);
             mark_answers(object);
             // countdown(2);
             setTimeout(gameover, 2000);
         }
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+            document.getElementById("song").addEventListener('play', () => {
+                if (played == false) {
+                    played = true;
+                    countdown({{time}});
+                }
+            });
+    });
+
 </script>
 
 <div class="text-center" style="margin-top: 3%;">
@@ -112,7 +144,7 @@
 
         <div>
             <img src="/static/time.png" height="64" width="64"></img>
-            <h2 id="time"></h2>
+            <h2 id="time">{{time}}</h2>
         </div>
     </div>
 
@@ -154,6 +186,7 @@
             <form class="d-flex flex-column w-100" style="text-align: center;" action="/score_reset/{{gamemode}}" method="post">
                 
                 <input type="hidden" id="url" name="url" value="{{url}}">
+                <input type="hidden" id="time" name="time" value="{{time}}">
 
                 <button id="play_again_button" type="submit" class="btn btn-green w-100" style="color: white;">
                     PLAY AGAIN
