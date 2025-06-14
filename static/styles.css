@@ -25,16 +25,19 @@
     background-color: #81b71a !important;
 }
 
+/*
 .footer {
+    margin-top: auto;
     position: fixed;
     width: 100%;
     color: white;
-    background-color: rgb(15, 15, 15);
-    bottom: 0;
+    background-color: rgb(15, 15, 15);  
+    bottom: 0%;
     border-top: 7px solid #81b71a;
     text-align: center;
     z-index: 1001;
 }
+*/
 
 .link {
     color: #81b71a;
@@ -146,4 +149,20 @@
         font-weight: bold;
         text-transform: uppercase;
         transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex-grow: 1;
+    padding: 20px;
+}
+
+.my-footer {
+    background-color: rgb(15, 15 ,15);
+    border-top: 7px solid #81b71a;
 }

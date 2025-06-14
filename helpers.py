@@ -269,7 +269,7 @@ def get_deezer_options(url, base_song):
         return "error"
         
     options = []
-    song = {"title": base_title, "img": base_img, "correct_answer": True}
+    song = {"title": base_title, "img": base_img, "correct_answer": True, "id": len(options)}
     options.append(song)
     
     while len(options) < 4:
@@ -277,7 +277,7 @@ def get_deezer_options(url, base_song):
         img_url = track["album"]["cover_medium"]
         if not check_dict_list(options, "img", img_url):
             title = track["title"]
-            song = {"title": title,"img": img_url, "correct_answer": False}
+            song = {"title": title,"img": img_url, "correct_answer": False, "id": len(options)}
             options.append(song)
             
     if len(options) < 4:
