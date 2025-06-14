@@ -186,6 +186,7 @@ def get_spotify_tracks_array(url):
     
     tracks_response = requests.get(tracks_url, headers=header)
     tracks = tracks_response.json()
+    print(f"Length of tracks_array get from spotify: {len(tracks)}")
     return tracks
     
     
@@ -229,21 +230,35 @@ def get_random_deezer_track(url):
     
     # trying to get the tracks of this playlist
     tracks_url = url + "/tracks"
-    print(f"called URL: {tracks_url}")
+    # print(f"called URL: {tracks_url}")
     
     # making API request
     tracks_response = requests.get(tracks_url)
     tracks = tracks_response.json()
+    final_tracklist = []
     
     # print(f"tracks json: {tracks}")
-    
     if "error" in tracks:
         return "error"
     
+    for track in tracks["data"]:
+        final_tracklist.append(track)
+    
     checked_tracks = 0
-    total_tracks = len(tracks["data"])
+    total_tracks = tracks["total"]
+    print(f"Length of tracks in the first search of playlist: {len(tracks["data"])}")
+    
+    while "next" in tracks:
+        tracks_response = requests.get(tracks["next"])
+        tracks = tracks_response.json()
+        
+        for track in tracks["data"]:
+            final_tracklist.append(track)
+        
+    print(f"Length of total_tracks used for select a song: {total_tracks}")
+    
     while checked_tracks < total_tracks:
-        random_track = random.choice(tracks["data"])
+        random_track = random.choice(final_tracklist)
         if random_track["preview"] != "":
             return random_track
         checked_tracks += 1
