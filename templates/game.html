@@ -36,10 +36,10 @@
 
         {% for option in options %}
         var img = document.createElement("img");
-        div = document.getElementById("{{ option["title"] | safe }}");
+        div = document.getElementById("{{ option["id"] }}");
 
         if (correct_answer == "{{option["correct_answer"]}}") {
-            correct_title = "{{option["title"] | safe}}";
+            correct_title = "{{ option["title"] }}";
             img.src = "/static/check.png";
 
         }
@@ -51,10 +51,10 @@
         originalImg = imgContainerDiv.querySelector(".options");
         img.classList.add("img-check")
         imgContainerDiv.insertBefore(img, originalImg);
-
+        
         {% endfor %}
 
-        document.getElementById("questions").innerText = correct_title;
+        document.getElementById("questions").innerHTML = correct_title;
     }
 
     function check_answer(object) {
@@ -158,7 +158,7 @@
 
     {% for option in options %}
 
-    <div id="{{ option["title"] | safe }}" class="text-center">
+    <div id="{{ option["id"] }}" class="text-center">
         <div class="img-container">
             <img class="options rounded img-fluid d-inline-block me-2 shadow img-answer" src="{{option["img"]}}" onclick="check_answer(this)">
         </div>

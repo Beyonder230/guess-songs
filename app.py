@@ -11,6 +11,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 app.permanent_session_lifetime = timedelta(days=99)
 
+
 @app.route('/')
 def index():
     return render_template("index.html")
@@ -184,6 +185,9 @@ def custom(url, time):
         return redirect("/error")
 
     return render_template("game.html", bigger_score = session["best_custom_score"], song = track, options = options, score = session["custom_score"], gamemode = "custom", url=url, time=time)
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
