@@ -2,7 +2,7 @@
 
 {% block main %}
 
-<!--
+<!--            CONFIG BUTTON
 <div class="d-flex justify-content-end m-3">
     <button type="button" id="config-button" class="btn btn-outline-dark fw-bold px-5 py-3 fs-5" onclick="openConfig();">
         <img src="/static/gear.svg" width="30" height="30">
@@ -11,7 +11,7 @@
 </div>
 -->
 
-<div class="gamemodes-options" style="margin-top: 5%;">
+<div class="gamemodes-options" style="margin-top: 2%;">
 
     <h1 class="text-center mb-4">Gamemodes:</h1>
 
@@ -38,7 +38,7 @@
 
 </div>
 
-<!--
+<!--        SETTINGS FORM
 <div id="settings" class="floating-form shadow-lg">
     <div class="d-flex justify-content-end m-3">
         <button type="button" class="btn-close" aria-label="Close" onclick="closeConfig()"></button>
@@ -60,18 +60,32 @@
     
     <h2 style="text-align: center;">CUSTOM GAMEMODE</h2>
 
-    <form action="/score_reset/custom" method="post">
+    <form id="customGameForm" action="/score_reset/custom" onsubmit="return customValidation()" method="post">
         <label for="url">Playlist URL:</label><br>
-        <input type="text" id="url" name="url" class="w-100" placeholder="https://open.spotify.com/playlist/37i9dQZEVXbMDoHDwVN2tF?si=sWF-9j8bRsK56xv8b04LXQ" required><br><br>
+        <input type="text" id="url" name="url" class="w-100" placeholder="https://open.spotify.com/playlist/37i9dQZEVXbMDoHDwVN2tF?si=sWF-9j8bRsK56xv8b04LXQ" required>
+        <span id="urlError"></span><br><br>
 
-        <label for="url">Time to answer (in seconds):</label><br>
-        <input type="text" id="time" name="time" class="w-100" placeholder="15" value="15" required><br><br>
+        <label for="time">Time to answer (in seconds):</label><br>
+        <input type="number" id="time" name="time" class="w-100" placeholder="15" value="15" min="1" max="99999" required><br><br>
 
         <button id="custom_game_button" type="submit" class="btn btn-green w-100">
             START
         </button>
     </form>
 
+    <div id="loading" class="d-flex justify-content-center m-3">
+
+    </div>
 </div>
+
+{% with messages = get_flashed_messages(with_categories=false) %}
+{% if messages %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            alert("{{messages[0]}}");
+        });
+    </script>
+{% endif %}
+{% endwith %}
 
 {% endblock %}

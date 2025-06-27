@@ -172,7 +172,7 @@ def get_spotify_tracks_array(url):
     # http info
     id = get_id_from_url(url, "playlist")
     if id == None:
-        return "Wrong playlist"
+        return "Could not get id from url"
     url = f"https://api.spotify.com/v1/playlists/{id}"
         
     header = {
@@ -193,6 +193,9 @@ def get_spotify_tracks_array(url):
     
 def get_random_spotify_track(url):
     tracks = get_spotify_tracks_array(url)
+    print(f"return of get_tracks = | {tracks} |")
+    if tracks == "Could not get id from url":
+        return tracks
     
     # print(f"tracks json: {tracks}")
     if "error" in tracks:
@@ -224,9 +227,8 @@ def get_random_deezer_track(url):
     elif "album" in url:
         id = get_id_from_url(url, "album")
         url = f"https://api.deezer.com/album/{id}"
-        
-    if id == None:
-        return "Wrong playlist"
+    else:
+        return "Could not get id from url"
     
     # trying to get the tracks of this playlist
     tracks_url = url + "/tracks"

@@ -2,8 +2,8 @@ from datetime import timedelta
 import urllib.parse
 import os
 from dotenv import load_dotenv
-from flask import Flask, render_template, session, request, redirect, url_for
-from helpers import get_access, get_deezer_options, get_spotify_options, get_random_deezer_track, get_random_spotify_track
+from flask import Flask, render_template, session, request, redirect, url_for, flash
+from helpers import get_deezer_options, get_spotify_options, get_random_deezer_track, get_random_spotify_track
 
 load_dotenv()
 
@@ -161,8 +161,14 @@ def custom(url, time):
     # selecting a random track
     if "spotify" in url:
         track = get_random_spotify_track(url)
+        if track == "Could not get id from url":
+            flash("Error: Unable to read url id, check your input.")
+            return redirect("/gamemodes")
     elif "deezer" in url:
         track = get_random_deezer_track(url)
+        if track == "Could not get id from url":
+            flash("Error: Unable to read url id, check your input.")
+            return redirect("/gamemodes")
     else:
         print(f"error in selecting a random track / url: {url}")
         return redirect("/error")
