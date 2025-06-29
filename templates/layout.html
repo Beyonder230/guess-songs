@@ -17,18 +17,27 @@
     </head>
 
     <body>
-
-        <nav class="navbar custom-navbar shadow-lg" style="background-color:rgb(15, 15, 15);" data-bs-theme="dark">
+        <!-- NAVEGATION BAR / TOP MENU -->
+        <nav class="navbar navbar-expand-lg custom-navbar shadow-lg" style="background-color:rgb(15, 15, 15);" data-bs-theme="dark">
             <div class="container-fluid">
-              <img src="/static/guess_icon.png" alt="Logo" width="170" height="170" class="d-inline-block align-text-top">
-              <a class="navbar-brand me-5" href="/">GUESS SONGS</a>
-              <ul class="navbar-nav d-flex flex-row me-auto mx-5 me-5 gap-5">
-                <div class="d-grid gap-5 d-md-flex justify-content-md-end">
-                    <a style="color: white;" class="btn btn-green fw-bold px-5 py-3 fs-5" href="/gamemodes" role="button">PLAY</a>
-                    <a style="color: white;" class="btn btn-green fw-bold px-5 py-3 fs-5" href="/howthegameworks" role="button">HOW THE GAME WORKS</a>
+                <a class="navbar-brand d-flex align-items-center" href="/">
+                    <img src="/static/guess_icon.png" alt="Logo" width="130" height="130" class="d-inline-block align-text-top me-3">
+                    <span class="fs-2">GUESS SONGS</span>
+                </a>
+        
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+        
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <div class="navbar-nav ms-lg-5 d-grid d-lg-flex gap-4">
+                        <a style="color: white;" class="btn btn-green fw-bold px-5 py-3 fs-4 text-nowrap" href="/gamemodes" role="button">PLAY</a>
+                        <a style="color: white;" class="btn btn-green fw-bold px-5 py-3 fs-4 text-nowrap" href="/howthegameworks" role="button">HOW THE GAME WORKS</a>
+                    </div>
                 </div>
             </div>
         </nav>
+        <!--======================================================================================================================================================-->
 
         <main>{% block main %}{% endblock %}</main>
 

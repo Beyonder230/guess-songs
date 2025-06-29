@@ -133,7 +133,7 @@
 
 </script>
 
-<div class="text-center" style="margin-top: 2%;">
+<div class="text-center">
     <h1 id="questions">???</h1>
 
     <div class="justify-content-center">
@@ -155,19 +155,27 @@
     </script>
 </div>
 
-<div class="d-flex justify-content-center gap-5" style="margin-top: 3%;">
+<!-- MUSIC OPTIONS -->
+<div class="container">
+    <div class="row justify-content-center g-5">
 
-    {% for option in options %}
+        {% for option in options %}
 
-    <div id="{{ option["id"] }}" class="text-center">
-        <div class="img-container">
-            <img class="options rounded img-fluid d-inline-block me-2 shadow img-answer" src="{{option["img"]}}" onclick="check_answer(this)">
+        <div class="col-12 col-md-6 col-lg-3">
+            <div id="{{ option["id"] }}" class="text-center">
+                <div class="img-container">
+                    <img class="options rounded img-fluid d-inline-block me-2 shadow img-answer" src="{{option["img"]}}" onclick="check_answer(this)">
+                </div>
+                <p class="mt-2 fw-bold">{{ option["title"] }}</p> 
+            </div>
         </div>
-        <p>{{ option["title"] }}</p> 
+
+        {% endfor %}
+
     </div>
-    {% endfor %}
 </div>
 
+<!-- SCORE -->
 <div class="d-flex justify-content-center">
     <div class="rounded border border-dark p-3" style="max-width: 300px;">
         <p id="current_score">Score: {{score}}</p>

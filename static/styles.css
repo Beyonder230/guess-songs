@@ -2,12 +2,18 @@
     border-bottom: 15px solid #81b71a;
     border-left: 5px solid #81b71a;
     border-right: 5px solid #81b71a;
-    min-height: 200px;
 }
 
 .custom-navbar .container-fluid {
-    height: 200px;
+    min-height: 120px;
     align-items: center;
+    transition: min-height 0.3s ease-in-out;
+}
+
+@media (min-width: 992px) {
+    .custom-navbar .container-fluid {
+        min-height: 200px;
+    }
 }
 
 .navbar-brand {
@@ -19,6 +25,13 @@
 .navbar-nav .nav-link,
 .navbar-brand {
     font-family: sans-serif;
+}
+
+@media (max-width: 991.98px) {
+    .custom-navbar .navbar-collapse {
+        padding-top: 20px;
+        padding-bottom: 15px;
+    }
 }
 
 .btn-green {
