@@ -349,3 +349,153 @@ def get_spotify_options(url, base_song):
     else:
         shuffled_options = random.sample(formatted_options, len(formatted_options))
         return shuffled_options
+# REFACTOR ==============================================================================================================================================================================
+    
+    
+    
+    
+def get_tracklist(url):
+    if "spotify" in url:
+        return get_spotify_tracklist(url)
+    elif "deezer" in url:
+        return get_deezer_tracklist(url)
+    else:
+        return None
+    
+    
+
+
+def get_spotify_tracklist(url):
+    # spotify authentification
+    access = get_access()
+    if access == None:
+        print("Authentification Error")
+        return None
+    
+    # http info
+    if "playlist" in url:
+        collection = "playlist"
+    elif "album" in url:
+        collection = "album"
+    else:
+        print("Error: could not identify playlist or album in url")
+        return None
+    
+    id = get_id_from_url(url, collection)
+    if id == None:
+        print("Could not get id from url")
+        return None
+    
+    api_url = f"https://api.spotify.com/v1/{collection}s/{id}"
+        
+    header = {
+        "Authorization": f"Bearer {access}",
+        "Content-Type": "application/json"
+        }
+    
+    id_counter = 1
+    tracks = {"origin": "spotify", "items": []}
+    
+    while api_url:
+        try:
+            response = requests.get(api_url, headers=header)
+            response.raise_for_status()
+            data = response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error at spotify API request. {e}")
+            return None
+        except ValueError:
+            print(f"Error at processing data from the spotify API")
+            return None
+        
+        track_page = data.get("tracks", data)
+        items = track_page.get('items', [])
+        
+        for item in items:
+            track_data = item.get('track') if 'track' in item else item
+            
+            if not track_data:
+                continue
+            
+            track = {
+                "id": id_counter,
+                "artists": [artist["name"] for artist in track_data.get("artists", [])],
+                "title": track_data.get("name"),
+                "image": track_data.get("album", {}).get("images", [{}])[0].get("url") if "album" in track_data else data.get("images", [{}])[0].get("url")
+            }
+            tracks["items"].append(track)
+            id_counter += 1
+            
+        api_url = track_page.get("next")
+        
+    print(f"Length of tracks_array get from spotify: {len(tracks["items"])}")
+    print(tracks)
+    #print(f"called URL: {url}")
+
+    return tracks
+
+
+
+
+def get_deezer_tracklist(url):
+    # http info
+    if "playlist" in url:
+        collection = "playlist"
+    elif "album" in url:
+        collection = "album"
+    else:
+        print("Error: could not identify playlist or album in url")
+        return None
+    
+    id = get_id_from_url(url, collection)
+    if id == None:
+        print("Could not get id from url")
+        return None
+    
+    api_url = f"https://api.deezer.com/{collection}/{id}/tracks"
+    tracks = {"origin": "deezer", "items": []}
+    id_counter = 1
+    
+    while api_url:
+        try:
+            response = requests.get(api_url)
+            response.raise_for_status()
+            data = response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error at deezer API request. {e}")
+            return None
+        except ValueError:
+            print(f"Error at processing data from the deezer API")
+            return None
+        
+        for track_data in data.get("data"):
+            if not track_data:
+                continue
+            
+            preview_url = track_data.get("preview")
+            if not preview_url:
+                continue
+
+            artist = track_data.get("artist")
+            if artist:
+                artist_name = artist.get("name")
+            else:
+                artist_name = "unknown artist"
+            
+            track = {
+                "id": id_counter,
+                "artists": [artist_name],
+                "title": track_data.get("title"),
+                "image": track_data.get("album", {}).get("cover_medium"),
+                "preview": preview_url
+            }
+            tracks["items"].append(track)
+            id_counter += 1
+            
+        api_url = data.get("next")
+        
+    print(f"Length of tracks_array get from deezer: {len(tracks["items"])}")
+    print(tracks)
+    #print(f"called URL: {url}")
+
+    return tracks

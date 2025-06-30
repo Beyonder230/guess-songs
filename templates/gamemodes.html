@@ -16,7 +16,7 @@
     <h1 class="text-center mb-4">Gamemodes:</h1>
 
     <div class="d-flex flex-column align-items-center justify-content-center gap-5 mb-3 gamemodes-buttons">
-        <form class="w-100" action="/score_reset/singleplayer" method="POST" style="max-width: 50%;">
+        <form class="w-100" action="/singleplayer" method="GET" style="max-width: 50%;">
             <button type="submit" class="btn btn-green w-100">
                 <img src="/static/singleplayer.png">    SINGLEPLAYER
             </button>
@@ -60,7 +60,7 @@
     
     <h2 style="text-align: center;">CUSTOM GAMEMODE</h2>
 
-    <form id="customGameForm" action="/score_reset/custom" onsubmit="return customValidation()" method="post">
+    <form id="customGameForm" action="/custom" onsubmit="return customValidation()" method="post">
         <label for="url">Playlist URL:</label><br>
         <input type="text" id="url" name="url" class="w-100" placeholder="https://open.spotify.com/playlist/37i9dQZEVXbMDoHDwVN2tF?si=sWF-9j8bRsK56xv8b04LXQ" required>
         <span id="urlError"></span><br><br>

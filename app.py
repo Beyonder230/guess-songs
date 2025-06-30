@@ -2,14 +2,20 @@ from datetime import timedelta
 import urllib.parse
 import os
 from dotenv import load_dotenv
-from flask import Flask, render_template, session, request, redirect, url_for, flash
-from helpers import get_deezer_options, get_spotify_options, get_random_deezer_track, get_random_spotify_track
+from flask import Flask, render_template, session, request, redirect, flash, jsonify, make_response
+from helpers import get_tracklist
+from flask_session import Session
 
 load_dotenv()
 
 app = Flask(__name__)
+app.config["SESSION_TYPE"] = "filesystem"
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 app.permanent_session_lifetime = timedelta(days=99)
+
+Session(app)
+
+
 
 
 @app.route('/')
@@ -19,46 +25,16 @@ def index():
 
 
 
-@app.route('/howthegameworks')
+@app.route("/howthegameworks")
 def howthegameworks():
     return render_template("rules.html")
 
 
 
 
-@app.route('/gamemodes')
+@app.route("/gamemodes")
 def play():
     return render_template("gamemodes.html")
-
-
-
-
-@app.route('/singleplayer', methods=["GET", "POST"])
-def singleplayer():
-    if "best_singleplayer_score" not in session:
-        session.permanent = True
-        session["best_singleplayer_score"] = 0
-    else:
-        if session["singleplayer_score"] > session["best_singleplayer_score"]:
-            session["best_singleplayer_score"] = session["singleplayer_score"]
-     
-    # default playlist for this gamemode
-    playlist_url = "https://www.deezer.com/br/playlist/4461060364"
-    track = get_random_deezer_track(playlist_url)
-        
-    # print(f"return of get_random_track(): {track}")
-    if track == "error":
-        return redirect("/error")
-    
-    # get info about the answer options
-    options = get_deezer_options(playlist_url, track)
-    # print(f"return of get_options(): {options}")
-    if options == "error":
-        return redirect("/error")
-    
-    time = 15
-
-    return render_template("game.html", bigger_score = session["best_singleplayer_score"], song = track, options = options, score = session["singleplayer_score"], gamemode = "singleplayer", time=time)
 
 
 
@@ -77,120 +53,83 @@ def attributions():
 
 
 
-@app.route("/score_update/custom/<path:url>/<int:time>")
-def score_custom(url, time):
-    mode_score = "custom_score"
-    
-    if mode_score not in session:
-        session[mode_score] = 0
-    
-    session[mode_score] += 1
-    
+@app.route("/get_game_data", methods=["POST"])
+def get_game_data():
+    return #TODO
 
-    url = urllib.parse.quote_plus(url, safe='')
-        
-    return redirect(url_for("custom", url=url, time=time))
+
+
+
+@app.route("/score_update", methods=["POST"])
+def score_update():
+    data = request.get_json()
+    gamemode = data.get("gamemode")
+    new_score = data.get("new_score")
     
+    if not gamemode or new_score is None:
+        return jsonify({"status": "erro", "mensagem": "Dados incompletos"}), 400
     
-    
-    
-@app.route("/score_update/<string:gamemode>")
-def score_update(gamemode):
     mode_score = f"{gamemode}_score"
+    old_score = int(request.cookies.get(mode_score, 0))
     
-    if mode_score not in session:
-        session[mode_score] = 0
+    response = make_response(jsonify({
+        "status": "success", 
+        "mensagem": "Score updated."
+    }))
     
-    session[mode_score] += 1
-    
-    if gamemode == "custom":
-        url = urllib.parse.quote_plus(url, safe='')
-            
-        return redirect(url_for(gamemode, url=url))
-    else:
-        return redirect(url_for(gamemode))
-
-
-
-
-@app.route("/score_reset/<string:gamemode>", methods=["GET", "POST"])
-def score_reset(gamemode):
-    mode_score = f"{gamemode}_score"
-    
-    session[mode_score] = 0
-    
-    if mode_score not in session:
-        session[mode_score] = 0
+    if new_score > old_score:
+        response.set_cookie(mode_score, str(new_score), max_age=31536000)
         
-    if request.method == "GET":
+    return response
+        
+        
+        
+        
+@app.route("/custom", methods=["POST"])
+def custom():    
+    time = request.form.get("time")
+    url = request.form.get("url")
+    
+    if not url or not time:
+        flash("Validation error: all fields must be filled")
         return redirect("/gamemodes")
-    elif request.method == "POST":
-        if gamemode == "custom":
-            time = request.form.get("time")
-            try:
-                time = int(time)
-            except:
-                print("Validation error: time variable is not a integer")
-                return redirect("/error")
-            
-            url = request.form.get("url")
-            url = urllib.parse.quote_plus(url, safe='')
-            
-            print(f"url: {url}")
-            return redirect(url_for(gamemode, url=url, time=time))
-        else:
-            return redirect(url_for(gamemode))
-        
-        
-        
-        
-@app.route("/custom/<string:url>/<int:time>", methods=["GET", "POST"])
-def custom(url, time):    
+    
+    try:
+        time = int(time)
+    except (ValueError, TypeError):
+        flash("Validation error: time variable is not a integer number")
+        return redirect("/gamemodes")
+
     url = urllib.parse.unquote_plus(url)
+    tracklist = get_tracklist(url)
+ 
+    if tracklist is None:
+        flash("Error: Unable to read url id, check your input.")
+        return redirect("/gamemodes")
     
-    # session score
-    if "best_custom_score" not in session:
-        session.permanent = True
-        session["best_custom_score"] = 0
-    if "custom_score" not in session:
-        session["custom_score"] = 0
+    session["tracklist"] = tracklist
+    max_score = session.get("custom_score", 0)
+    
+    return render_template("game.html", bigger_score = max_score, gamemode = "custom", url=url, time=time)
 
-    if session["custom_score"] > session["best_custom_score"]:
-        session["best_custom_score"] = session["custom_score"]
-    
-    # selecting a random track
-    if "spotify" in url:
-        track = get_random_spotify_track(url)
-        if track == "Could not get id from url":
-            flash("Error: Unable to read url id, check your input.")
-            return redirect("/gamemodes")
-    elif "deezer" in url:
-        track = get_random_deezer_track(url)
-        if track == "Could not get id from url":
-            flash("Error: Unable to read url id, check your input.")
-            return redirect("/gamemodes")
-    else:
-        print(f"error in selecting a random track / url: {url}")
-        return redirect("/error")
+
+
+
+@app.route("/singleplayer")
+def singleplayer():
+    time = 15
+    # default playlist for this gamemode
+    playlist_url = "https://www.deezer.com/br/playlist/4461060364"
+    tracklist = get_tracklist(playlist_url)
         
-    # print(f"return of get_random_track(): {track}")
-    if track == "error":
-        return redirect("/error")
+    if tracklist is None:
+        flash("Error: Unable to read url id, check your input.")
+        return redirect("/gamemodes")
+
+    session["tracklist"] = tracklist
+    max_score = session.get("singleplayer_score", 0)
     
-    # get info about the answer options
-    if "spotify" in url:
-        options = get_spotify_options(url, track)
-    elif "deezer" in url:
-        options = get_deezer_options(url, track)
-    else:
-        print(f"error in getting options / url: {url}")
-        return redirect("/error")
-
-    # print(f"return of get_options(): {options}")
-    if options == "error":
-        return redirect("/error")
-
-    return render_template("game.html", bigger_score = session["best_custom_score"], song = track, options = options, score = session["custom_score"], gamemode = "custom", url=url, time=time)
+    return render_template("game.html", bigger_score = max_score, gamemode = "singleplayer", time=time)
 
 
 
