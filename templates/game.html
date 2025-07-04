@@ -1,222 +1,162 @@
 {% extends "layout.html" %}
 
 {% block main %}
-<script>
-    let answered = false;
-    let played = false;
+<div id="game-container" data-time="{{time}}" data-gamemode="{{gamemode}}">
 
-    function gameover() {
-        document.getElementById("gameover").style.display = "block";
-    }
+    <div class="text-center">
+        <h1 id="questions">???</h1>
 
-    function countdown(time) {
-        let timer = document.getElementById("time");
-        timer.innerText = time.toString();
+        <div class="justify-content-center">
+            <div>
+                <audio controls id="song">
+                    <source id="song_source" src="" type="audio/mpeg">
+                </audio>
+            </div>
 
-        interval = setInterval(function() {
-            if (time <= 0) {
-                answered = true;
-                gameover();
-                clearInterval(interval);
-                return;
-            }
+            <div class="container my-4">
 
-            time--;
-            timer.innerText = time.toString();
-        }, 1000);
-    }
+                <div class="d-flex flex-wrap justify-content-center align-items-center gap-4">
+            
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="/static/time.png" height="48" width="48" alt="Ícone de Relógio">
+                        <h2 id="time" class="mb-0 fw-bold">{{time}}</h2>
+                    </div>
+            
+                    <div class="text-center lh-1">
+                        <p class="mb-1">Score: <span id="current_score" class="fw-bold">0</span></p>
+                        <p class="mb-0">Top Score: <span id="biggest_score" class="fw-bold">{{bigger_score}}</span></p>
+                    </div>
+            
+                </div>
+                
+            </div>
 
-    function mark_answers(object) {
-
-        const correct_answer = "True";
-        let div;
-        var originalImg;
-        var imgContainerDiv;
-        let correct_title;
-
-        {% for option in options %}
-        var img = document.createElement("img");
-        div = document.getElementById("{{ option["id"] }}");
-
-        if (correct_answer == "{{option["correct_answer"]}}") {
-            correct_title = "{{ option["title"] }}";
-            img.src = "/static/check.png";
-
-        }
-        else {
-            img.src = "/static/delete.png";
-        }
-
-        imgContainerDiv = div.querySelector(".img-container");
-        originalImg = imgContainerDiv.querySelector(".options");
-        img.classList.add("img-check")
-        imgContainerDiv.insertBefore(img, originalImg);
-
-        {% endfor %}
-
-        document.getElementById("questions").innerHTML = correct_title;
-    }
-
-    function check_answer(object) {
-        if (answered) {
-            return;
-        }
-        clearInterval(interval);
-        answered = true;
-        
-
-        object.style.border = "thick solid black";
-
-        {% for option in options %}
-        {% if option["correct_answer"] %}
-        let correct_image = "{{option["img"]}}";
-        {% endif %}
-        {% endfor %}
-
-        if (object.src == correct_image) {
-            console.log("correct answer")
-            let score = document.getElementById("current_score").innerText;
-            score = score.split(" ");
-            score = score[score.length - 1];
-            score = parseInt(score) + 1;
-            text = "Score: " + score.toString();
-            document.getElementById("current_score").innerText = text;
-
-            if (score > {{bigger_score}}) {
-                document.getElementById("biggest_score").innerText = "Biggest score: " + score.toString();
-            }
-
-            mark_answers(object);
-
-            // right answer redirect 
-            let title = document.getElementById("questions").innerText;
-
-            /*
-            const score_json = {
-                currect_title: title,
-                current_score: score,
-                lose: false
-            };
-            */
-
-            // countdown(2);
-            setTimeout(function() {
-                {% if gamemode == "custom" %}
-                let originalUrl = "{{url}}";
-                let time = {{time}};
-                let url = encodeURIComponent(originalUrl);
-                window.location.href = "/score_update/{{gamemode}}/" + url + "/" + time.toString()
-                {% else %}
-                window.location.href = "/score_update/{{gamemode}}"
-                {% endif %}
-            }, 2000);
-            // ===========================
-        }
-        else {
-            console.log("wrong answer");
-            clearInterval(interval);
-            mark_answers(object);
-            // countdown(2);
-            setTimeout(gameover, 2000);
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-
-            document.getElementById("song").addEventListener('play', () => {
-                if (played == false) {
-                    played = true;
-                    countdown({{time}});
-                }
-            });
-    });
-
-</script>
-
-<div class="text-center">
-    <h1 id="questions">???</h1>
-
-    <div class="justify-content-center">
-        <div>
-            <audio controls id="song">
-                <source src="{{song["preview"]}}" type="audio/mpeg">
-            </audio>
+            <!--- TIME COUNTER
+            <div class="d-flex justify-content-center">
+                <div class="rounded border border-dark p-3 d-flex align-items-center justify-content-center gap-3">
+                    <img src="/static/time.png" height="64" width="64">
+                    <h2 id="time" class="mb-0">{{time}}</h2>
+                </div>
+            </div>
+            -->
         </div>
 
-        <div>
-            <img src="/static/time.png" height="64" width="64"></img>
-            <h2 id="time">{{time}}</h2>
+        <script>
+            const audio = document.getElementById("song");
+            audio.volume = 0.15;
+        </script>
+    </div>
+
+    <!-- MUSIC OPTIONS -->
+    <div class="container">
+        <div id="options" class="row justify-content-center g-5">
+
+
+            <div class="col-12 col-md-6 col-lg-3">
+                <div id="" class="option-button text-center">
+                    <div class="img-container">
+                        <img class="clickable rounded img-fluid d-inline-block me-2 shadow img-answer" src="" onclick="check_answer(this)">
+                    </div>
+                    <p class="mt-2 fw-bold"></p> 
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-3">
+                <div id="" class="option-button text-center">
+                    <div class="img-container">
+                        <img class="clickable rounded img-fluid d-inline-block me-2 shadow img-answer" src="" onclick="check_answer(this)">
+                    </div>
+                    <p class="mt-2 fw-bold"></p> 
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-3">
+                <div id="" class="option-button text-center">
+                    <div class="img-container">
+                        <img class="clickable rounded img-fluid d-inline-block me-2 shadow img-answer" src="" onclick="check_answer(this)">
+                    </div>
+                    <p class="mt-2 fw-bold"></p> 
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-3">
+                <div id="" class="option-button text-center">
+                    <div class="img-container">
+                        <img class="clickable rounded img-fluid d-inline-block me-2 shadow img-answer" src="" onclick="check_answer(this)">
+                    </div>
+                    <p class="mt-2 fw-bold"></p> 
+                </div>
+            </div>
+
+
         </div>
     </div>
 
-    <script>
-        const audio = document.getElementById("song");
-        audio.volume = 0.15;
-    </script>
-</div>
+    <!-- SCORE 
+    <div class="d-flex justify-content-center">
+        <div class="rounded border border-dark p-3" style="max-width: 300px;">
+            <p>Score: <span id="current_score">0</span></p>
+            <p>Top score: <span id="biggest_score">{{bigger_score}}</span></p>
+        </div>
+    </div>
+    -->
 
-<!-- MUSIC OPTIONS -->
-<div class="container">
-    <div class="row justify-content-center g-5">
+    <div id="endgame" class="floating-form shadow-lg">
+    
+        <h2 id="endgame_message" class="text-center"></h2><br><br>
+    
+        <div class="d-flex flex-column align-items-center gap-3 mb-3">
+    
+            <div class="w-75">
+                <form action="/{{gamemode}}" method="POST">
+                    <input type="hidden" name="url" value="{{url}}">
+                    <input type="hidden" name="time" value="{{time}}">
+                    <button id="play_again_button" type="submit" class="btn btn-green w-100 text-white">
+                        PLAY AGAIN
+                    </button>
+                </form>
+            </div>
+    
+            <div class="w-75">
+                <form action="/gamemodes" method="get">
+                    <button id="return_button" type="submit" class="btn btn-green w-100 text-white">
+                        RETURN TO MENU
+                    </button>
+                </form>
+            </div>
+    
+        </div>
+    </div>
+    <!-- ENDGAME FORM
+    <div id="endgame" class="floating-form shadow-lg">
+        <h2 id="endgame_message" style="text-align: center;"></h2><br><br>
 
-        {% for option in options %}
+        <div class="d-flex flex-column align-items-center justify-content-around gap-5 mb-3">
 
-        <div class="col-12 col-md-6 col-lg-3">
-            <div id="{{ option["id"] }}" class="text-center">
-                <div class="img-container">
-                    <img class="options rounded img-fluid d-inline-block me-2 shadow img-answer" src="{{option["img"]}}" onclick="check_answer(this)">
-                </div>
-                <p class="mt-2 fw-bold">{{ option["title"] }}</p> 
+            <div class="d-flex flex-column text-center" style="width: 50%;">
+                <form class="d-flex flex-column w-100" style="text-align: center;" action="/{{gamemode}}" method="post">
+                    
+                    <input type="hidden" id="url" name="url" value="{{url}}">
+                    <input type="hidden" id="time" name="time" value="{{time}}">
+
+                    <button id="play_again_button" type="submit" class="btn btn-green w-100" style="color: white;">
+                        PLAY AGAIN
+                    </button>
+                </form>
+            </div>
+
+            <div class="d-flex flex-column text-center" style="width: 50%;">
+
+                <form class="d-flex flex-column w-100" style="text-align: center;" action="/gamemodes" method="get">
+                    <button id="return_button" type="submit" class="btn btn-green w-100" style="color: white;">
+                        RETURN TO MENU
+                    </button>
+                </form>
+        
             </div>
         </div>
-
-        {% endfor %}
-
     </div>
-</div>
-
-<!-- SCORE -->
-<div class="d-flex justify-content-center">
-    <div class="rounded border border-dark p-3" style="max-width: 300px;">
-        <p id="current_score">Score: {{score}}</p>
-        <p id="biggest_score">Top score: {{bigger_score}}</p>
-    </div>
-</div>
-
-
-<div id="gameover" class="floating-form shadow-lg">
-
-    <h2 style="text-align: center; color: red;">GAMEOVER</h2><br><br>
-
-    <div class="d-flex flex-column align-items-center justify-content-around gap-3 mb-3">
-
-        <!--  changed  -->
-        <div class="d-flex flex-column text-center" style="width: 50%;">
-            <form class="d-flex flex-column w-100" style="text-align: center;" action="/score_reset/{{gamemode}}" method="post">
-                
-                <input type="hidden" id="url" name="url" value="{{url}}">
-                <input type="hidden" id="time" name="time" value="{{time}}">
-
-                <button id="play_again_button" type="submit" class="btn btn-green w-100" style="color: white;">
-                    PLAY AGAIN
-                </button>
-            </form>
-        </div>
-
-        <div class="d-flex flex-column text-center" style="width: 50%;">
-
-            <form class="d-flex flex-column w-100" style="text-align: center;" action="/score_reset/{{gamemode}}" method="get">
-                
-
-                <button id="return_button" type="submit" class="btn btn-green w-100" style="color: white;">
-                    RETURN TO MENU
-                </button>
-            </form>
-        </div>
-
-
-    </div>
+    -->
 
 </div>
-
 {% endblock %}
