@@ -89,6 +89,7 @@ def get_spotify_tracklist(url):
     id_counter = 1
     playable_tracks = []
     options_tracks = []
+    total_tracks = 0
     
     while api_url:
         try:
@@ -103,12 +104,20 @@ def get_spotify_tracklist(url):
             return None
         
         track_page = data.get("tracks", data)
+        if id_counter == 1:
+            total_tracks = track_page.get("total", 0)
+        
         items = track_page.get('items', [])
         
         for item in items:
             track_data = item.get('track') if 'track' in item else item
             
             if not track_data:
+                continue
+            
+            album_images = track_data.get("album", {}).get("images", []) 
+            image_url = album_images[0].get("url") if album_images else None
+            if not image_url:
                 continue
             
             options_track = {
@@ -122,26 +131,25 @@ def get_spotify_tracklist(url):
             if not preview:
                 artists = [artist["name"] for artist in track_data.get("artists", [])]
                 preview = get_preview_from_deezer(track_data.get("name"), artists)
-                if not preview:
-                    id_counter += 1
-                    continue
             
-            playable_track = {
-                "id": id_counter,
-                "preview": preview
+            if preview:
+                playable_track = {
+                    "id": id_counter,
+                    "preview": preview
 
-            }
-            playable_tracks.append(playable_track)
+                }
+                playable_tracks.append(playable_track)
             
             id_counter += 1
             
         api_url = track_page.get("next")
+        print(f"next field = {api_url}")
         
     print(f"Length of total tracks get from spotify: {len(options_tracks)}")
     print(f"Length of playable tracks get from spotify: {len(playable_tracks)}")
     #print(f"called URL: {url}")
 
-    return {"playable_tracks": playable_tracks, "options_tracks": options_tracks}
+    return {"playable_tracks": playable_tracks, "options_tracks": options_tracks, "total_tracks": total_tracks}
 
 
 
@@ -179,9 +187,10 @@ def get_deezer_tracklist(url):
             print(f"Error at processing data from the deezer API")
             return None
         
-        if first_call == True and collection == "album":
-            album_cover = data.get("cover_medium")
-            first_call = False
+        if first_call == True:
+            total_tracks = data.get("nb_tracks")
+            if collection == "album":
+                album_cover = data.get("cover_medium")
             
         track_source = data.get("tracks", data)
         items_list = track_source.get("data", [])
@@ -198,25 +207,23 @@ def get_deezer_tracklist(url):
             options_tracks.append(options_track)
             
             preview_url = track_data.get("preview")
-            if not preview_url:
-                id_counter += 1
-                continue
-
-            playable_track = {
-                "id": id_counter,
-                "preview": preview_url
-            }
-            playable_tracks.append(playable_track)
+            if preview_url:
+                playable_track = {
+                    "id": id_counter,
+                    "preview": preview_url
+                }
+                playable_tracks.append(playable_track)
             
             id_counter += 1
-            
+        
         api_url = data.get("next")
+        first_call = False
         
     print(f"Length of total tracks get from deezer: {len(options_tracks)}")
     print(f"Length of playable tracks get from deezer: {len(playable_tracks)}")
     #print(f"called URL: {url}")
 
-    return {"playable_tracks": playable_tracks, "options_tracks": options_tracks}
+    return {"playable_tracks": playable_tracks, "options_tracks": options_tracks, "total_tracks": total_tracks}
 
 
 

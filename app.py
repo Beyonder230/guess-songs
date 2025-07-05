@@ -138,12 +138,18 @@ def check_answer():
 def start_game(url, gamemode, time):
     tracklist = get_tracklist(url)
     
-    if tracklist is None:
+    if not tracklist:
         flash("Couldn't load the playlist. Please check the link and make sure the playlist is public.")
         return redirect("/gamemodes")
     elif len(tracklist.get("playable_tracks", [])) < 5:
         flash("This playlist is a bit short! Please choose a playlist or album with at least 5 playable tracks.")
         return redirect("/gamemodes")
+
+    total_tracks = tracklist.get("total_tracks", 0)
+    loaded_tracks = len(tracklist.get("options_tracks", []))
+    
+    if total_tracks > loaded_tracks and loaded_tracks > 0:
+        flash(f"Warning: This playlist is too big! The game was loaded with the first {loaded_tracks} tracks.")
 
     session["tracklist"] = tracklist
     session["score"] = 0

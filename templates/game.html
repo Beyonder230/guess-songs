@@ -31,14 +31,6 @@
                 
             </div>
 
-            <!--- TIME COUNTER
-            <div class="d-flex justify-content-center">
-                <div class="rounded border border-dark p-3 d-flex align-items-center justify-content-center gap-3">
-                    <img src="/static/time.png" height="64" width="64">
-                    <h2 id="time" class="mb-0">{{time}}</h2>
-                </div>
-            </div>
-            -->
         </div>
 
         <script>
@@ -92,14 +84,15 @@
         </div>
     </div>
 
-    <!-- SCORE 
-    <div class="d-flex justify-content-center">
-        <div class="rounded border border-dark p-3" style="max-width: 300px;">
-            <p>Score: <span id="current_score">0</span></p>
-            <p>Top score: <span id="biggest_score">{{bigger_score}}</span></p>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="alert alert-warning text-center mx-auto my-3" style="max-width: 800px;" role="alert">
+        {% for message in messages %}
+            {{ message }}
+        {% endfor %}
         </div>
-    </div>
-    -->
+    {% endif %}
+    {% endwith %}
 
     <div id="endgame" class="floating-form shadow-lg">
     
@@ -127,36 +120,6 @@
     
         </div>
     </div>
-    <!-- ENDGAME FORM
-    <div id="endgame" class="floating-form shadow-lg">
-        <h2 id="endgame_message" style="text-align: center;"></h2><br><br>
-
-        <div class="d-flex flex-column align-items-center justify-content-around gap-5 mb-3">
-
-            <div class="d-flex flex-column text-center" style="width: 50%;">
-                <form class="d-flex flex-column w-100" style="text-align: center;" action="/{{gamemode}}" method="post">
-                    
-                    <input type="hidden" id="url" name="url" value="{{url}}">
-                    <input type="hidden" id="time" name="time" value="{{time}}">
-
-                    <button id="play_again_button" type="submit" class="btn btn-green w-100" style="color: white;">
-                        PLAY AGAIN
-                    </button>
-                </form>
-            </div>
-
-            <div class="d-flex flex-column text-center" style="width: 50%;">
-
-                <form class="d-flex flex-column w-100" style="text-align: center;" action="/gamemodes" method="get">
-                    <button id="return_button" type="submit" class="btn btn-green w-100" style="color: white;">
-                        RETURN TO MENU
-                    </button>
-                </form>
-        
-            </div>
-        </div>
-    </div>
-    -->
 
 </div>
 {% endblock %}
