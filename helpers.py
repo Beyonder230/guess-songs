@@ -90,6 +90,7 @@ def get_spotify_tracklist(url):
     playable_tracks = []
     options_tracks = []
     total_tracks = 0
+    first_call = True
     
     while api_url:
         try:
@@ -104,8 +105,10 @@ def get_spotify_tracklist(url):
             return None
         
         track_page = data.get("tracks", data)
-        if id_counter == 1:
+        if first_call:
+            collection_image = data.get("images", [{}])[0].get("url")
             total_tracks = track_page.get("total", 0)
+            first_call = False
         
         items = track_page.get('items', [])
         
@@ -115,15 +118,17 @@ def get_spotify_tracklist(url):
             if not track_data:
                 continue
             
-            album_images = track_data.get("album", {}).get("images", []) 
-            image_url = album_images[0].get("url") if album_images else None
-            if not image_url:
-                continue
+            image_url = None
+            if collection == "album":
+                image_url = collection_image if collection_image else "/static/images/default_cover.png"
+            else:
+                album_images = track_data.get("album", {}).get("images", []) 
+                image_url = album_images[0].get("url") if album_images else "/static/images/default_cover.png"
             
             options_track = {
                 "id": id_counter,
                 "title": track_data.get("name"),
-                "image": track_data.get("album", {}).get("images", [{}])[0].get("url") if "album" in track_data else data.get("images", [{}])[0].get("url")
+                "image": image_url
             }
             options_tracks.append(options_track)
             
@@ -190,7 +195,7 @@ def get_deezer_tracklist(url):
         if first_call == True:
             total_tracks = data.get("nb_tracks")
             if collection == "album":
-                album_cover = data.get("cover_medium")
+                album_cover = data.get("cover_medium", "/static/images/default_cover.png")
             
         track_source = data.get("tracks", data)
         items_list = track_source.get("data", [])
@@ -202,7 +207,7 @@ def get_deezer_tracklist(url):
             options_track = {
                 "id": id_counter,
                 "title": track_data.get("title"),
-                "image": track_data.get("album", {}).get("cover_medium") if collection == "playlist" else album_cover
+                "image": track_data.get("album", {}).get("cover_medium", "/static/images/default_cover.png") if collection == "playlist" else album_cover
             }
             options_tracks.append(options_track)
             

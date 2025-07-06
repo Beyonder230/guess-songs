@@ -139,7 +139,7 @@ def start_game(url, gamemode, time):
     tracklist = get_tracklist(url)
     
     if not tracklist:
-        flash("Couldn't load the playlist. Please check the link and make sure the playlist is public.")
+        flash("Couldn't load the playlist. Please check if the link is correct and make sure the playlist is public.")
         return redirect("/gamemodes")
     elif len(tracklist.get("playable_tracks", [])) < 5:
         flash("This playlist is a bit short! Please choose a playlist or album with at least 5 playable tracks.")
@@ -186,7 +186,7 @@ def custom():
 @app.route("/singleplayer", methods=["GET", "POST"])
 def singleplayer():
     # default playlist for this gamemode
-    playlist_url = "https://www.deezer.com/br/playlist/4461060364"
+    playlist_url = "https://www.deezer.com/br/playlist/3155776842"
     return start_game(playlist_url, "singleplayer", 15)
 
 

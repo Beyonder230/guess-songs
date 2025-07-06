@@ -210,7 +210,7 @@ function setData(data) {
             const image = container.querySelector(".img-answer");
             const title = container.querySelector('p');
 
-            image.src = optionData.image || '';
+            image.src = optionData.image || "/static/images/default_cover.png";
             title.textContent = optionData.title;
 
             container.dataset.songId = optionData.id;

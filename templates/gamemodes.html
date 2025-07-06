@@ -82,7 +82,7 @@
 {% if messages %}
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            alert("{{messages[0]}}");
+            alert("{{messages[0] | safe}}");
         });
     </script>
 {% endif %}

@@ -3,14 +3,29 @@
 {% block main %}
 
 <div class="text">
-    <h1 class="center">Rules:</h1>
-    <blockquote class="blockquote" style="text-align: justify;">
-        <p>The rules of the game are simple: one song will be randomly selected from the Deezer playlist (the base playlist is <i>Top 50 - Global</i>). Your job is to guess which song it was from a selection of four options. For each correct answer, your score will increase. If you choose the wrong one, the game is over. The same song will never appear twice in a row.</p>
-    </blockquote>
-    <h1 class="center">Future changes:</h1>
-    <blockquote class="blockquote" style="text-align: justify;">
-        <p>Currently, this website offers only one game mode (singleplayer), but I have future plans to implement other modes, such as multiplayer — where multiple players compete against each other — and a custom mode, where the host can choose a Spotify playlist for the game (following certain rules) and decide whether to play in singleplayer or multiplayer mode.</p>
-    </blockquote>
+    <h1 class="center">The Goal:</h1>
+    <div class="blockquote" style="text-align: justify;">
+        <p>Your objective is to guess the song that is playing from four options before the time runs out. The timer starts the moment you first play the audio for each round.</p>
+    </div>
+    <h1 class="center">Gameplay:</h1>
+    <div class="blockquote" style="text-align: justify;">
+        <p>A correct answer increases your score and immediately starts the next round with a new song. A single wrong answer, or running out of time, ends the game. The same song will never be the correct answer twice in one match.</p>
+    </div>
+    <h1 class="center">Scoring:</h1>
+    <div class="blockquote" style="text-align: justify;">
+        <p>The game tracks your current score during the match. Your personal best for each game mode is saved in your browser, so you can always come back and try to beat your own top score.</p>
+    </div>
+    <h1 class="center">Singleplayer:</h1>
+    <div class="blockquote" style="text-align: justify;">
+        <p>The fastest way to play. Jump right into the action with our default curated playlist and a fixed timer. It’s perfect for a quick game and for setting new records.</p>
+    </div>
+    <h1 class="center">Custom Mode:</h1>
+    <div class="blockquote" style="text-align: justify;">
+        <p>This mode gives you control. Use any public playlist or album link from Spotify or Deezer and set your own time limit per round. <b>For this to work, your playlist must be public and contain at least 5 playable tracks.</b></p>
+        <blockquote>
+            <p><b>A Quick Tip for Spotify Playlists:</b> For the best results, we recommend using playlists created by users (like you or your friends). Some official playlists curated by Spotify can have restrictions that prevent third-party games like this one from accessing their tracks. Public playlists made by users almost always work perfectly!</p>
+        </blockquote>
+    </div>
 </div>
 
 {% endblock %}
