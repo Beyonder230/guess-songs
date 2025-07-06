@@ -75,7 +75,7 @@ def get_spotify_tracklist(url):
         return None
     
     id = get_id_from_url(url, collection)
-    if id == None:
+    if not id:
         print("Could not get id from url")
         return None
     
@@ -91,6 +91,7 @@ def get_spotify_tracklist(url):
     options_tracks = []
     total_tracks = 0
     first_call = True
+    album_cover_url = None
     
     while api_url:
         try:

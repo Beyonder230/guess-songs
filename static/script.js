@@ -167,26 +167,64 @@ function clear_marks() {
     }
 }
 
+function preLoadAsset(url) {
+    return new Promise((resolve, reject) => {
+        const isImage = /\.(jpeg|jpg|gif|png|webp)$/.test(url);
+        const isAudio = /\.(mp3|wav|ogg)$/.test(url);
+
+        if (isImage) {
+            const img = new Image();
+
+            img.onload = () => resolve(url);
+            img.onerror = () => reject(new Error(`Error at loading image: ${url}`));
+
+            img.src = url;
+        } else if (isAudio) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok)
+                        throw new Error(`HTTP error at searching for audio: ${response.statusText}`);
+                    return response.blob();
+                })
+                .then(blob => {
+                    const blobUrl = URL.createObjectURL(blob);
+                    resolve({ url: blobUrl, type: "audio" });
+                })
+                .catch(error => reject(error));
+        } else {
+            resolve(url);
+        }
+    });
+}
+
 async function getData() {
     try {
         const response = await fetch("/get_game_data");
 
-        if (!response.ok) {
+        if (!response.ok)
             throw new Error(`HTTP error! Status: ${response.status}`);
-        }
 
         const data = await response.json();
 
-        if (data.error) {
+        if (data.error)
             throw new Error(`Server data error: ${data.error}`);
+
+        if (data.win === true)
+            return gameWin();
+
+        const urlsToPreload = [data.song.preview, ...data.options.map(option => option.image)];
+
+        const preloadPromises = urlsToPreload.map(url => preLoadAsset(url));
+
+        const loadedAssets = await Promise.all(preloadPromises);
+
+        const audioAsset = loadedAssets.find(asset => asset.type === "audio");
+        if (audioAsset) {
+            data.song.preview = audioAsset.url;
         }
 
-        if (data.win === true) {
-            gameWin();
-        } else {
-            setData(data);
-        }
- 
+        setData(data);
+        
     } catch (error) {
         console.log("Error at setting the game.");
         alert("Could not load the page! Please try to reload the page.");
