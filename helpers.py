@@ -3,6 +3,8 @@ import base64
 import os
 from dotenv import load_dotenv
 import urllib
+from thefuzz import fuzz
+import re
 
 load_dotenv()
 
@@ -57,7 +59,7 @@ def get_tracklist(url):
     
     
 
-
+'''
 def get_spotify_tracklist(url):
     # spotify authentification
     access = get_access()
@@ -91,7 +93,6 @@ def get_spotify_tracklist(url):
     options_tracks = []
     total_tracks = 0
     first_call = True
-    album_cover_url = None
     
     while api_url:
         try:
@@ -149,6 +150,124 @@ def get_spotify_tracklist(url):
             id_counter += 1
             
         api_url = track_page.get("next")
+        print(f"next field = {api_url}")
+        
+    print(f"Length of total tracks get from spotify: {len(options_tracks)}")
+    print(f"Length of playable tracks get from spotify: {len(playable_tracks)}")
+    #print(f"called URL: {url}")
+
+    return {"playable_tracks": playable_tracks, "options_tracks": options_tracks, "total_tracks": total_tracks}
+'''
+
+
+
+
+def get_spotify_tracklist(url):
+    # spotify authentification
+    access = get_access()
+    if access == None:
+        print("Authentification Error")
+        return None
+    
+    # http info
+    if "playlist" in url:
+        collection = "playlist"
+    elif "album" in url:
+        collection = "album"
+    else:
+        print("Error: could not identify playlist or album in url")
+        return None
+    
+    id = get_id_from_url(url, collection)
+    if not id:
+        print("Could not get id from url")
+        return None
+    
+    BASE_URL = "https://api.spotify.com/v1"
+        
+    header = {
+        "Authorization": f"Bearer {access}",
+        "Content-Type": "application/json"
+        }
+    
+    api_url = None
+    album_cover_url = None
+    
+    needed_fields = "items(track(id,name,preview_url,artists(name),album(images))),next,total"
+    encoded_fields = urllib.parse.quote(needed_fields)
+
+    # IF ALBUM THIS IS THE FIRST CALL TO GET ALBUM COVER
+    # PREPARE THE NEXT URL TO CALL
+    try:
+        if collection == "album":
+            album_response = requests.get(f"{BASE_URL}/albums/{id}", headers=header)
+            album_response.raise_for_status()
+            album_data = album_response.json()
+            
+            album_images = album_data.get("images", [])
+            album_cover_url = album_images[0].get("url") if album_images else None
+            
+            api_url = f"{BASE_URL}/albums/{id}/tracks?limit=50"
+        elif collection == "playlist":
+            api_url = f"{BASE_URL}/playlists/{id}/tracks?limit=50&fields={encoded_fields}"
+    except requests.exceptions.RequestException as e:
+        print(f"Error at first spotify API call: {e}")
+        return None
+    
+    playable_tracks, options_tracks = [], []
+    id_counter, total_tracks = 1, 0
+    first_call = True
+    
+    while api_url:
+        try:
+            response = requests.get(api_url, headers=header)
+            response.raise_for_status()
+            data = response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error at spotify API request. {e}")
+            return None
+        except ValueError:
+            print(f"Error at processing data from the spotify API")
+            return None
+        
+        if first_call:
+            total_tracks = data.get("total", 0)
+            first_call = False
+        
+        for item in data.get("items", []):
+            track_data = item.get("track") if "track" in item else item
+            
+            if not track_data or not track_data.get("name"):
+                continue
+            
+            image_url = album_cover_url if collection == "album" else None
+            if not image_url:
+                track_album_images  = track_data.get("album", {}).get("images", []) 
+                image_url = track_album_images [0].get("url") if track_album_images else "/static/images/default_cover.png"
+            
+            options_track = {
+                "id": id_counter,
+                "title": track_data.get("name"),
+                "image": image_url
+            }
+            options_tracks.append(options_track)
+            
+            preview = track_data.get("preview_url")
+            if not preview:
+                artists_list = track_data.get("artists", [])
+                artist = artists_list[0].get("name") if len(artists_list) > 0 else None
+                preview = get_preview_from_deezer(track_data.get("name"), artist)
+            
+            if preview:
+                playable_track = {
+                    "id": id_counter,
+                    "preview": preview
+                }
+                playable_tracks.append(playable_track)
+            
+            id_counter += 1
+            
+        api_url = data.get("next")
         print(f"next field = {api_url}")
         
     print(f"Length of total tracks get from spotify: {len(options_tracks)}")
@@ -234,27 +353,66 @@ def get_deezer_tracklist(url):
 
 
 
-def get_preview_from_deezer(title, artists):
-    for artist in artists:
-        safe_title = urllib.parse.quote_plus(title)
-        safe_artist = urllib.parse.quote_plus(artist)
+def _normalize_title(title):
+    if not title:
+        return None
+    
+    normalized = title.lower()
+    normalized = normalized.replace('&', "and")
+    normalized = re.sub(r'[\(\)\[\]]', '', normalized)
+    normalized = re.sub(r'[^\w\s]', '', normalized)
+    normalized = re.sub(r'\s+', ' ', normalized).strip()
+    
+    return normalized
+    
+    
+    
+    
+def get_preview_from_deezer(title, primary_artist):
+    if not primary_artist:
+        return None
+    
+    normalized_spotify_title = _normalize_title(title)
+    
+    safe_title = urllib.parse.quote_plus(title)
+    safe_artist = urllib.parse.quote_plus(primary_artist)
+    
+    api_url = f'https://api.deezer.com/search?q=track:"{safe_title}"artist:"{safe_artist}"'
+    
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
         
-        api_url = f'https://api.deezer.com/search?q=track:"{safe_title}"artist:"{safe_artist}"'
-        
-        try:
-            response = requests.get(api_url)
-            response.raise_for_status()
-            data = response.json()
-            search_results = data.get("data")
-
-            if len(search_results) > 0:
-                for item in search_results:
-                    if item.get("title", "").strip().upper() == title.strip().upper():
-                        return item.get("preview")
-        except requests.exceptions.RequestException as e:
-            print(f"Request error: could not search for {title} in deezer. {e}")
+        search_results = data.get("data", [])
+        if not search_results:
             return None
-        except ValueError:
-            print(f"Data error: Invalid answer from deezer API searching from {title}")
-            continue
-    return None
+
+        best_match = None
+        highest_score = -1
+        
+        for item in search_results:
+            deezer_title = item.get("title", "")
+            normalized_deezer_title = _normalize_title(deezer_title)
+            
+            score = fuzz.ratio(normalized_spotify_title, normalized_deezer_title)
+            
+            if score > highest_score:
+                highest_score = score
+                best_match = item
+                
+        CONFIDENCE_THRESHOLD = 85
+        if highest_score >= CONFIDENCE_THRESHOLD:
+            print(f"    -> Best match found ({highest_score}%). '{best_match.get("title")}'")
+            return best_match.get("preview")
+        else:
+            if best_match:
+                print(f"    -> Best match found ({highest_score}%), but under the confidence threshold. '{best_match.get("title")}'")
+            return None
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: could not search for {title} in deezer. {e}")
+        return None
+    except ValueError:
+        print(f"Data error: Invalid answer from deezer API searching from {title}")
+        return None

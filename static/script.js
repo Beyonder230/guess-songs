@@ -199,12 +199,14 @@ function preLoadAsset(url) {
 
 async function getData() {
     try {
+        console.log("1. Fetching next round data...");
         const response = await fetch("/get_game_data");
 
         if (!response.ok)
             throw new Error(`HTTP error! Status: ${response.status}`);
 
         const data = await response.json();
+        console.log("2. Data received from backend:", data);
 
         if (data.error)
             throw new Error(`Server data error: ${data.error}`);
@@ -213,9 +215,16 @@ async function getData() {
             return gameWin();
 
         const urlsToPreload = [data.song.preview, ...data.options.map(option => option.image)];
+        console.log("3. Assets to preload:", urlsToPreload);
+
+        if (!data.song.preview) {
+            console.error("CRITICAL ERROR: The received song has no preview URL!");
+            throw new Error("Song without preview received from backend.");
+        }
 
         const preloadPromises = urlsToPreload.map(url => preLoadAsset(url));
 
+        console.log("4. Awaiting all assets to preload...");
         const loadedAssets = await Promise.all(preloadPromises);
 
         const audioAsset = loadedAssets.find(asset => asset.type === "audio");
@@ -223,10 +232,11 @@ async function getData() {
             data.song.preview = audioAsset.url;
         }
 
+        console.log("5. SUCCESS! All assets have been preloaded.");
         setData(data);
         
     } catch (error) {
-        console.log("Error at setting the game.");
+        console.error("ERROR: Failed inside getGame's try-catch block:", error);
         alert("Could not load the page! Please try to reload the page.");
     }
 }
