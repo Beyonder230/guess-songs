@@ -74,10 +74,6 @@ def get_game_data():
         return make_response(jsonify({"win": True}))
 
     chose_track = random.choice(playable_tracks)
-    playable_tracks.remove(chose_track)
-    session["correct_song"] = chose_track
-    session["tracklist"]["playable_tracks"] = playable_tracks
-    session.modified = True
     
     correct_option = next((opt for opt in options_tracks if opt.get('id') == chose_track.get('id')), None)
     if correct_option is None:
@@ -107,30 +103,39 @@ def get_game_data():
 @app.route("/check_answer", methods=["POST"])
 def check_answer():
     data = request.get_json()
-    option_id = data.get("id")
+    selected_id = data.get("selected_id")
+    correct_id = data.get("correct_id")
     gamemode = data.get("gamemode")
     
     if not gamemode:
         return jsonify({"status": "error", "message": "Gamemode not provided."}), 400
-    if not option_id:
+    if not selected_id:
         return jsonify({"status": "error", "message": "SongID from selected object not provided."}), 400
+    if not correct_id:
+        return jsonify({"status": "error", "message": "Correct song ID not provided."}), 400
     
-    correct_song = session.get("correct_song", {})
-    correct_song_id = correct_song.get("id")
+    tracklist_data = session.get("tracklist", {})
+    if tracklist_data:
+        playable_tracks = tracklist_data.get("playable_tracks", [])
+        
+        playable_tracks = [track for track in playable_tracks if str(track.get("id")) != str(correct_id)]
+        session["tracklist"]["playable_tracks"] = playable_tracks
     
-    if str(correct_song_id) == str(option_id):
+    if str(correct_id) == str(selected_id):
         session["score"] = session.get("score", 0) + 1
         session.modified = True
         
         max_score = get_max_score(gamemode, session["score"], request.cookies)
         
-        response_data = {"result": "correct", "score": session["score"], "correct_song_id": correct_song_id, "max_score": max_score}
+        response_data = {"result": "correct", "score": session["score"], "correct_song_id": correct_id, "max_score": max_score}
         response = make_response(jsonify(response_data))
         response.set_cookie(f"{gamemode}_score", str(max_score),  max_age=31536000)
-        return response
     else:
         max_score = int(request.cookies.get(f"{gamemode}_score", 0))
-        return jsonify({"result": "wrong", "score": session.get("score", 0), "correct_song_id": correct_song_id, "max_score": max_score})
+        response = jsonify({"result": "wrong", "score": session.get("score", 0), "correct_song_id": correct_id, "max_score": max_score})
+        
+    session.modified = True
+    return response
         
         
         

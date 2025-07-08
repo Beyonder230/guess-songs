@@ -116,6 +116,7 @@ function customGameLoading() {
 let played = false;
 let countdownInterval;
 let answered = false;
+let correctAnswerId;
 
 function startGame(time) {
     initializeAudioPlayer();
@@ -321,6 +322,8 @@ function setData(data) {
             container.style.display = "none";
         }
     });
+
+    correctAnswerId = data.song.id;
 }
 
 function startCountdown(time) {
@@ -390,13 +393,13 @@ async function check_answer(object) {
     object.classList.add("selected");
 
     const gamemode = document.getElementById("game-container").dataset.gamemode;
-    const option_id = { id: object.dataset.songId, gamemode: gamemode };
+    const body = { selected_id: object.dataset.songId, gamemode: gamemode, correct_id: correctAnswerId };
     
     try {
         const response = await fetch("/check_answer", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify(option_id)
+            body: JSON.stringify(body)
         });
 
         if (!response.ok) {
