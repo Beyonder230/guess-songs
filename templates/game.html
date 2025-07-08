@@ -7,10 +7,16 @@
         <h1 id="questions">???</h1>
 
         <div class="justify-content-center">
-            <div>
-                <audio controls id="song">
-                    <source id="song_source" src="" type="audio/mpeg">
-                </audio>
+
+            <audio id="song">
+                <source id="song_source" src="" type="audio/mpeg">
+            </audio>
+
+            <div class="custom-audio-player">
+                <button id="play-pause-btn" class="player-button">▶</button>
+                <span id="current-time-display" class="time-display">0:00</span>
+                <input type="range" id="seek-bar" class="seek-bar" value="0" step="1">
+                <span id="duration-display" class="time-display">0:00</span>
             </div>
 
             <div class="container my-4">

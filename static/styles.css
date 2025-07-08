@@ -22,12 +22,6 @@
     font-size: 50px !important;
 }
 
-/*
-.navbar-nav .nav-link,
-.navbar-brand {
-     font-family: sans-serif;
-} */
-
 @media (max-width: 991.98px) {
     .custom-navbar .navbar-collapse {
         padding-top: 20px;
@@ -38,20 +32,6 @@
 .btn-green {
     background-color: #81b71a !important;
 }
-
-/*
-.footer {
-    margin-top: auto;
-    position: fixed;
-    width: 100%;
-    color: white;
-    background-color: rgb(15, 15, 15);  
-    bottom: 0%;
-    border-top: 7px solid #81b71a;
-    text-align: center;
-    z-index: 1001;
-}
-*/
 
 .link {
     color: #81b71a;
@@ -77,23 +57,6 @@
     text-align: right !important;
     margin: 30px !important;
 }
-
-/* OLD FLOATING FORM
-.floating-form {
-    position: fixed;
-    display: none;
-    top: 50%;
-    left: 50%;
-    min-width: 33%;
-    min-height: 33%;
-    background-color: white;
-    transform: translate(-50%, -50%);
-    padding: 20px;
-    border-radius: 0.5rem;
-    z-index: 1000;
-    border: 2px solid #81b71a;
-}
-*/
 
 .clickable:hover {
     transform: scale(1.05);
@@ -272,4 +235,71 @@ body, main, button, a {
 .clickable.selected {
     border-color: #000000;
     transform: scale(0.97);
+}
+
+.custom-audio-player {
+    gap: 15px;
+    background-color: #212529;
+    border-radius: 50px;
+    max-width: 450px;
+    padding: 12px 20px;
+    align-items: center;
+    display: flex;
+    margin: 20px auto;
+    border: 2px solid #333;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.player-button {
+    background-color: #81b71a;
+    font-size: 25px;
+    cursor: pointer;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    transition: all 0.2s ease;
+}
+
+.time-display {
+    font-size: 0.9rem;
+    text-align: center;
+    color: white;
+    max-width: 40px;
+}
+
+.seek-bar {
+    -webkit-appearance: none;
+    appearance: none;
+    flex-grow: 1;
+    background: #697179;
+    background-image: linear-gradient(to right, #81b71a var(--seek-before-width), #495057 var(--seek-before-width));
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+    height: 8px;
+}
+
+.seek-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+    border-radius: 50%;
+    border: 3px solid #81b71a;
+    margin-top: -5px;
+
+    transition: transform 0.2s ease;
+}
+
+.seek-bar::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.seek-bar::-moz-range-progress {
+    background-color: #81b71a;
+    height: 8px;
+    border-radius: 5px;
 }

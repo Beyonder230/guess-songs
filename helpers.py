@@ -209,7 +209,7 @@ def get_spotify_tracklist(url):
             
             api_url = f"{BASE_URL}/albums/{id}/tracks?limit=50"
         elif collection == "playlist":
-            api_url = f"{BASE_URL}/playlists/{id}/tracks?limit=50&fields={encoded_fields}"
+            api_url = f"{BASE_URL}/playlists/{id}/tracks?limit=100&fields={encoded_fields}"
     except requests.exceptions.RequestException as e:
         print(f"Error at first spotify API call: {e}")
         return None
@@ -268,7 +268,7 @@ def get_spotify_tracklist(url):
             id_counter += 1
             
         api_url = data.get("next")
-        print(f"next field = {api_url}")
+        #print(f"next field = {api_url}")
         
     print(f"Length of total tracks get from spotify: {len(options_tracks)}")
     print(f"Length of playable tracks get from spotify: {len(playable_tracks)}")
@@ -368,8 +368,10 @@ def _normalize_title(title):
     
     
     
+    
 def get_preview_from_deezer(title, primary_artist):
     if not primary_artist:
+        print(f"Not found artist to music '{primary_artist}'")
         return None
     
     normalized_spotify_title = _normalize_title(title)
@@ -386,6 +388,7 @@ def get_preview_from_deezer(title, primary_artist):
         
         search_results = data.get("data", [])
         if not search_results:
+            print(f"Spotify music '{title}' for artist {primary_artist} could not find a deezer version")
             return None
 
         best_match = None
@@ -403,11 +406,12 @@ def get_preview_from_deezer(title, primary_artist):
                 
         CONFIDENCE_THRESHOLD = 85
         if highest_score >= CONFIDENCE_THRESHOLD:
-            print(f"    -> Best match found ({highest_score}%). '{best_match.get("title")}'")
+            #print(f"    -> Best match found ({highest_score}%). '{best_match.get("title")}'")
             return best_match.get("preview")
         else:
-            if best_match:
-                print(f"    -> Best match found ({highest_score}%), but under the confidence threshold. '{best_match.get("title")}'")
+            #if best_match:
+                #print(f"    -> Best match found ({highest_score}%), but under the confidence threshold. '{best_match.get("title")}'")
+            print(f"Title of spotify music not found in deezer: '{title}' for artist: {primary_artist}")
             return None
     
     except requests.exceptions.RequestException as e:

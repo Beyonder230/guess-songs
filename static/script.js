@@ -118,6 +118,7 @@ let countdownInterval;
 let answered = false;
 
 function startGame(time) {
+    initializeAudioPlayer();
     getData();
 
     document.getElementById("song").addEventListener('play', () => {
@@ -126,6 +127,59 @@ function startGame(time) {
             startCountdown(time);
         }
     });
+}
+
+function initializeAudioPlayer() {
+    const audio = document.getElementById("song");
+    const playPauseBtn = document.getElementById("play-pause-btn");
+    const seekBar = document.getElementById("seek-bar");
+    const currentTimeDisplay = document.getElementById("current-time-display");
+    const durationDisplay = document.getElementById("duration-display");
+
+    playPauseBtn.addEventListener("click", () => {
+        if (audio.paused) {
+            playPauseBtn.textContent = "❚❚";
+            audio.play();
+        }
+        else {
+            playPauseBtn.textContent = '▶';
+            audio.pause();
+        }
+    });
+
+    audio.addEventListener("timeupdate", () => {
+        seekBar.value = audio.currentTime;
+        currentTimeDisplay.textContent = formatTime(audio.currentTime);
+
+        const progressPercentage = (audio.currentTime / audio.duration) * 100;
+        seekBar.style.setProperty('--seek-before-width', `${progressPercentage}%`);
+    });
+
+    audio.addEventListener("loadedmetadata", () => {
+        seekBar.max = audio.duration;
+        durationDisplay.textContent = formatTime(audio.duration);
+    });
+
+    audio.addEventListener("ended", () => {
+        playPauseBtn.textContent = '▶';
+    });
+
+    seekBar.addEventListener("input", () => {
+        audio.currentTime = seekBar.value;
+        currentTimeDisplay.textContent = formatTime(seekBar.value);
+    });
+
+    seekBar.addEventListener("change", () => {
+        if (!audio.paused) {
+            animationFrameId = requestAnimationFrame(updateSeekBar);
+        }
+    });
+}
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const scds = Math.floor(seconds % 60);
+    return `${minutes}:${scds.toString().padStart(2, '0')}`;
 }
 
 function gameWin() {
@@ -382,6 +436,9 @@ function clear_selected() {
 }
 
 function next_round() {
+    const play_pause_btn = document.getElementById("play-pause-btn");
+    play_pause_btn.textContent = '▶';
+
     clear_marks();
     clear_title();
     clear_selected();
