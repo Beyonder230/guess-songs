@@ -303,3 +303,37 @@ body, main, button, a {
     height: 8px;
     border-radius: 5px;
 }
+
+.volume-container {
+    gap: 8px;
+}
+
+.volume-bar {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 80px;
+    height: 6px;
+    background: #adb5bd;
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.volume-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #81b71a;
+    border-radius: 50%;
+    margin-top: -5px;
+}
+
+.volume-bar::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #81b71a;
+    border-radius: 50%;
+    border: none;
+}

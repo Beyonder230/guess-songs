@@ -136,6 +136,15 @@ function initializeAudioPlayer() {
     const seekBar = document.getElementById("seek-bar");
     const currentTimeDisplay = document.getElementById("current-time-display");
     const durationDisplay = document.getElementById("duration-display");
+    const volumeBar = document.getElementById("volume-bar");
+
+    if (!audio || !volumeBar) return;
+
+    audio.volume = volumeBar.value / 100;
+
+    volumeBar.addEventListener("input", () => {
+        audio.volume = volumeBar.value / 100;
+    });
 
     playPauseBtn.addEventListener("click", () => {
         if (audio.paused) {
@@ -313,7 +322,7 @@ function setData(data) {
             const image = container.querySelector(".img-answer");
             const title = container.querySelector('p');
 
-            image.src = optionData.image || "/static/images/default_cover.png";
+            image.src = optionData.image || "/static/default_cover.png";
             title.textContent = optionData.title;
 
             container.dataset.songId = optionData.id;

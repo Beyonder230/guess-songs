@@ -122,10 +122,10 @@ def get_spotify_tracklist(url):
             
             image_url = None
             if collection == "album":
-                image_url = collection_image if collection_image else "/static/images/default_cover.png"
+                image_url = collection_image if collection_image else "/static/default_cover.png"
             else:
                 album_images = track_data.get("album", {}).get("images", []) 
-                image_url = album_images[0].get("url") if album_images else "/static/images/default_cover.png"
+                image_url = album_images[0].get("url") if album_images else "/static/default_cover.png"
             
             options_track = {
                 "id": id_counter,
@@ -243,7 +243,7 @@ def get_spotify_tracklist(url):
             image_url = album_cover_url if collection == "album" else None
             if not image_url:
                 track_album_images  = track_data.get("album", {}).get("images", []) 
-                image_url = track_album_images [0].get("url") if track_album_images else "/static/images/default_cover.png"
+                image_url = track_album_images [0].get("url") if track_album_images else "/static/default_cover.png"
             
             options_track = {
                 "id": id_counter,
@@ -315,7 +315,7 @@ def get_deezer_tracklist(url):
         if first_call == True:
             total_tracks = data.get("nb_tracks")
             if collection == "album":
-                album_cover = data.get("cover_medium", "/static/images/default_cover.png")
+                album_cover = data.get("cover_medium", "/static/default_cover.png")
             
         track_source = data.get("tracks", data)
         items_list = track_source.get("data", [])
@@ -327,7 +327,7 @@ def get_deezer_tracklist(url):
             options_track = {
                 "id": id_counter,
                 "title": track_data.get("title"),
-                "image": track_data.get("album", {}).get("cover_medium", "/static/images/default_cover.png") if collection == "playlist" else album_cover
+                "image": track_data.get("album", {}).get("cover_medium", "/static/default_cover.png") if collection == "playlist" else album_cover
             }
             options_tracks.append(options_track)
             

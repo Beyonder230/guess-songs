@@ -17,6 +17,10 @@
                 <span id="current-time-display" class="time-display">0:00</span>
                 <input type="range" id="seek-bar" class="seek-bar" value="0" step="1">
                 <span id="duration-display" class="time-display">0:00</span>
+
+                <div class="volume-container d-flex align-items-center">
+                    <img src="/static/sound.png" alt="Volume" height="24" width="24" /> <input type="range" id="volume-bar" class="volume-bar" min="0" max="100" value="15">
+                </div>
             </div>
 
             <div class="container my-4">
@@ -39,10 +43,6 @@
 
         </div>
 
-        <script>
-            const audio = document.getElementById("song");
-            audio.volume = 0.15;
-        </script>
     </div>
 
     <!-- MUSIC OPTIONS -->
