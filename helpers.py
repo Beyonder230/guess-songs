@@ -176,6 +176,7 @@ def get_spotify_tracklist(url):
     tracks_with_preview = [track for track in playable_tracks if track["preview"]]
     tracks_without_preview = [track for track in playable_tracks if not track["preview"]]
     found_previews = {}
+    used_previews = set()
     
     if tracks_without_preview:
         batch_size = 15
@@ -189,8 +190,9 @@ def get_spotify_tracklist(url):
                 results = list(executor.map(lambda p: get_preview_from_deezer(*p), args))
             
                 for j, track in enumerate(batch_of_tracks):
-                    if results[j]:
+                    if results[j] and results[j] not in used_previews:
                         found_previews[track.get("id")] = results[j]
+                        used_previews.add(results[j])
                     
             time.sleep(1)
         
