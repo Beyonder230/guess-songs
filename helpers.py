@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import urllib
 from thefuzz import fuzz
 import re
+from concurrent.futures import ThreadPoolExecutor
+import time
 
 load_dotenv()
 
@@ -41,7 +43,7 @@ def get_access():
 def get_id_from_url(url, type):
     type = type + "/"
     if type in url:
-        print(f"playlist_id = {url.split(type)[1].split("?")[0]}")
+        #print(f"playlist_id = {url.split(type)[1].split("?")[0]}")
         return url.split(type)[1].split("?")[0]
     return None # error return
 # REFACTOR ==============================================================================================================================================================================
@@ -56,108 +58,6 @@ def get_tracklist(url):
         return get_deezer_tracklist(url)
     else:
         return None
-    
-    
-
-'''
-def get_spotify_tracklist(url):
-    # spotify authentification
-    access = get_access()
-    if access == None:
-        print("Authentification Error")
-        return None
-    
-    # http info
-    if "playlist" in url:
-        collection = "playlist"
-    elif "album" in url:
-        collection = "album"
-    else:
-        print("Error: could not identify playlist or album in url")
-        return None
-    
-    id = get_id_from_url(url, collection)
-    if not id:
-        print("Could not get id from url")
-        return None
-    
-    api_url = f"https://api.spotify.com/v1/{collection}s/{id}"
-        
-    header = {
-        "Authorization": f"Bearer {access}",
-        "Content-Type": "application/json"
-        }
-    
-    id_counter = 1
-    playable_tracks = []
-    options_tracks = []
-    total_tracks = 0
-    first_call = True
-    
-    while api_url:
-        try:
-            response = requests.get(api_url, headers=header)
-            response.raise_for_status()
-            data = response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"Error at spotify API request. {e}")
-            return None
-        except ValueError:
-            print(f"Error at processing data from the spotify API")
-            return None
-        
-        track_page = data.get("tracks", data)
-        if first_call:
-            collection_image = data.get("images", [{}])[0].get("url")
-            total_tracks = track_page.get("total", 0)
-            first_call = False
-        
-        items = track_page.get('items', [])
-        
-        for item in items:
-            track_data = item.get('track') if 'track' in item else item
-            
-            if not track_data:
-                continue
-            
-            image_url = None
-            if collection == "album":
-                image_url = collection_image if collection_image else "/static/default_cover.png"
-            else:
-                album_images = track_data.get("album", {}).get("images", []) 
-                image_url = album_images[0].get("url") if album_images else "/static/default_cover.png"
-            
-            options_track = {
-                "id": id_counter,
-                "title": track_data.get("name"),
-                "image": image_url
-            }
-            options_tracks.append(options_track)
-            
-            preview = track_data.get("preview_url")
-            if not preview:
-                artists = [artist["name"] for artist in track_data.get("artists", [])]
-                preview = get_preview_from_deezer(track_data.get("name"), artists)
-            
-            if preview:
-                playable_track = {
-                    "id": id_counter,
-                    "preview": preview
-
-                }
-                playable_tracks.append(playable_track)
-            
-            id_counter += 1
-            
-        api_url = track_page.get("next")
-        print(f"next field = {api_url}")
-        
-    print(f"Length of total tracks get from spotify: {len(options_tracks)}")
-    print(f"Length of playable tracks get from spotify: {len(playable_tracks)}")
-    #print(f"called URL: {url}")
-
-    return {"playable_tracks": playable_tracks, "options_tracks": options_tracks, "total_tracks": total_tracks}
-'''
 
 
 
@@ -253,28 +153,57 @@ def get_spotify_tracklist(url):
             options_tracks.append(options_track)
             
             preview = track_data.get("preview_url")
-            if not preview:
-                artists_list = track_data.get("artists", [])
-                artist = artists_list[0].get("name") if len(artists_list) > 0 else None
-                preview = get_preview_from_deezer(track_data.get("name"), artist)
+
+            artists_list = track_data.get("artists", [])
+            artist = artists_list[0].get("name") if len(artists_list) > 0 else None
             
-            if preview:
-                playable_track = {
-                    "id": id_counter,
-                    "preview": preview
-                }
-                playable_tracks.append(playable_track)
+            playable_track = {
+                "id": id_counter,
+                "preview": preview,
+                "artist": artist,
+                "title": track_data.get("name")
+            }
+            playable_tracks.append(playable_track)
             
             id_counter += 1
-            
+          
+        if len(playable_tracks) >= 400:
+            break
+        
         api_url = data.get("next")
         #print(f"next field = {api_url}")
         
+    tracks_with_preview = [track for track in playable_tracks if track["preview"]]
+    tracks_without_preview = [track for track in playable_tracks if not track["preview"]]
+    found_previews = {}
+    
+    if tracks_without_preview:
+        batch_size = 15
+        max_workers_per_batch = 10
+        
+        for i in range(0, len(tracks_without_preview), batch_size):
+            batch_of_tracks = tracks_without_preview[i:i + batch_size]
+            
+            with ThreadPoolExecutor(max_workers=max_workers_per_batch) as executor:
+                args = [(track.get("title"), track.get("artist") if track.get("artist") else None) for track in batch_of_tracks]
+                results = list(executor.map(lambda p: get_preview_from_deezer(*p), args))
+            
+                for j, track in enumerate(batch_of_tracks):
+                    if results[j]:
+                        found_previews[track.get("id")] = results[j]
+                    
+            time.sleep(1)
+        
+    for track in tracks_without_preview:
+        if track.get("id") in found_previews:
+            track["preview"] = found_previews[track.get("id")]
+            tracks_with_preview.append(track)
+        
     print(f"Length of total tracks get from spotify: {len(options_tracks)}")
-    print(f"Length of playable tracks get from spotify: {len(playable_tracks)}")
+    print(f"Length of playable tracks get from spotify: {len(tracks_with_preview)}")
     #print(f"called URL: {url}")
 
-    return {"playable_tracks": playable_tracks, "options_tracks": options_tracks, "total_tracks": total_tracks}
+    return {"playable_tracks": tracks_with_preview, "options_tracks": options_tracks, "total_tracks": total_tracks}
 
 
 
@@ -388,7 +317,7 @@ def get_preview_from_deezer(title, primary_artist):
         
         search_results = data.get("data", [])
         if not search_results:
-            print(f"Spotify music '{title}' for artist {primary_artist} could not find a deezer version")
+            #print(f"Spotify music '{title}' for artist {primary_artist} could not find a deezer version")
             return None
 
         best_match = None
@@ -406,12 +335,12 @@ def get_preview_from_deezer(title, primary_artist):
                 
         CONFIDENCE_THRESHOLD = 85
         if highest_score >= CONFIDENCE_THRESHOLD:
-            #print(f"    -> Best match found ({highest_score}%). '{best_match.get("title")}'")
+            print(f"    -> Best match found ({highest_score}%). '{best_match.get("title")}'")
             return best_match.get("preview")
         else:
-            #if best_match:
-                #print(f"    -> Best match found ({highest_score}%), but under the confidence threshold. '{best_match.get("title")}'")
-            #print(f"Title of spotify music not found in deezer: '{title}' for artist: {primary_artist}")
+            if best_match:
+                print(f"    -> Best match found ({highest_score}%), but under the confidence threshold. '{best_match.get("title")}'")
+            print(f"Title of spotify music not found in deezer: '{title}' for artist: {primary_artist}")
             return None
     
     except requests.exceptions.RequestException as e:
