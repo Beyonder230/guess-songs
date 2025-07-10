@@ -398,6 +398,8 @@ async function check_answer(object) {
         return
     }
 
+    const rightAnswerSound = document.getElementById("right_answer_sound");
+    const wrongAnswerSound = document.getElementById("wrong_answer_sound");
     answered = true;
     object.classList.add("selected");
 
@@ -426,13 +428,23 @@ async function check_answer(object) {
         mark_answers(resultData.correct_song_id);
         show_title(resultData.correct_song_id);
 
-        setTimeout(function () {
-            if (resultData.result === "correct") {
-                next_round();
-            } else {
-                gameLose();
+        if (resultData.result === "correct") {
+            if (rightAnswerSound) {
+                rightAnswerSound.currentTime = 0;
+                rightAnswerSound.play();
             }
-         }, 2000);
+            setTimeout(function () {
+                next_round();
+            }, 2000);
+        } else {
+            if (wrongAnswerSound) {
+                wrongAnswerSound.currentTime = 0;
+                wrongAnswerSound.play();
+            }
+            setTimeout(function () {
+                gameLose();
+            }, 2000);
+        }
     } catch (error) {
         console.log("Error at checking answer:", error);
         answered = false;
