@@ -7,10 +7,17 @@ from thefuzz import fuzz
 import re
 from concurrent.futures import ThreadPoolExecutor
 import time
+from cachetools import TTLCache
 
 load_dotenv()
+deezer_preview_cache = TTLCache(maxsize=5000, ttl=86400)
+spotify_token_cache = TTLCache(maxsize=1, ttl=3500)
+playlist_cache = TTLCache(maxsize=100, ttl=3600)
 
 def get_access():
+    if "access_token" in spotify_token_cache:
+        return spotify_token_cache["access_token"]
+    
     url = "https://accounts.spotify.com/api/token"
     client_id = os.environ.get("SPOTIFY_CLIENT_ID")
     client_secret = os.environ.get("SPOTIFY_SECRET_ID")
@@ -32,6 +39,7 @@ def get_access():
     # print(f"acess_token json: {response_data}")
     
     if "access_token" in response_data:
+        spotify_token_cache["access_token"] = response_data["access_token"]
         return response_data["access_token"]
     else:
         print("Token generating error", response_data)
@@ -63,13 +71,6 @@ def get_tracklist(url):
 
 
 def get_spotify_tracklist(url):
-    # spotify authentification
-    access = get_access()
-    if access == None:
-        print("Authentification Error")
-        return None
-    
-    # http info
     if "playlist" in url:
         collection = "playlist"
     elif "album" in url:
@@ -81,6 +82,15 @@ def get_spotify_tracklist(url):
     id = get_id_from_url(url, collection)
     if not id:
         print("Could not get id from url")
+        return None
+    
+    if id in playlist_cache:
+        return playlist_cache[id]
+    
+    # spotify authentification
+    access = get_access()
+    if access == None:
+        print("Authentification Error")
         return None
     
     BASE_URL = "https://api.spotify.com/v1"
@@ -152,16 +162,21 @@ def get_spotify_tracklist(url):
             }
             options_tracks.append(options_track)
             
-            preview = track_data.get("preview_url")
-
+            title = track_data.get("name")
+            
             artists_list = track_data.get("artists", [])
             artist = artists_list[0].get("name") if len(artists_list) > 0 else None
+            
+            if (title, artist) in deezer_preview_cache:
+                preview = deezer_preview_cache[(title, artist)]
+            else:
+                preview = track_data.get("preview_url")
             
             playable_track = {
                 "id": id_counter,
                 "preview": preview,
                 "artist": artist,
-                "title": track_data.get("name")
+                "title": title
             }
             playable_tracks.append(playable_track)
             
@@ -204,7 +219,8 @@ def get_spotify_tracklist(url):
     print(f"Length of total tracks get from spotify: {len(options_tracks)}")
     print(f"Length of playable tracks get from spotify: {len(tracks_with_preview)}")
     #print(f"called URL: {url}")
-
+    
+    playlist_cache[id] = {"playable_tracks": tracks_with_preview, "options_tracks": options_tracks, "total_tracks": total_tracks}
     return {"playable_tracks": tracks_with_preview, "options_tracks": options_tracks, "total_tracks": total_tracks}
 
 
@@ -319,9 +335,13 @@ def _clean_search_title(title):
     
     
 def get_preview_from_deezer(title, primary_artist):
-    if not primary_artist:
-        print(f"Not found artist to music '{primary_artist}'")
+    if not primary_artist or not title:
+        print(f"Not found artist '{primary_artist}' or title '{title}'")
         return None
+    
+    cache_key = (title, primary_artist)
+    if cache_key in deezer_preview_cache:
+        return deezer_preview_cache[cache_key]
     
     normalized_spotify_title = _normalize_title(title)
     clean_spotify_title = _clean_search_title(title)
@@ -338,8 +358,8 @@ def get_preview_from_deezer(title, primary_artist):
         
         search_results = data.get("data", [])
         if not search_results:
-            #print(f"Spotify music '{title}' for artist {primary_artist} could not find a deezer version")
-            return None
+            print(f"Spotify music '{title}' for artist {primary_artist} could not find a deezer version")
+            result = None
 
         best_match = None
         highest_score = -1
@@ -370,26 +390,30 @@ def get_preview_from_deezer(title, primary_artist):
             if clean_score > highest_clean_score:
                 highest_clean_score = clean_score
                 best_clean_match = item
+                
+        CONFIDENCE_THRESHOLD = 85
+        if highest_score >= CONFIDENCE_THRESHOLD:
+            print(f"    -> Best match found ({highest_score}%). '{best_match.get("title")}'")
+            result = best_match.get("preview")
+        elif highest_partial_score >= CONFIDENCE_THRESHOLD:
+            print(f"    -> Best match found *partial match* ({highest_partial_score}%). '{best_partial_match.get("title")}'")
+            result = best_partial_match.get("preview")
+        elif highest_clean_score >= CONFIDENCE_THRESHOLD:
+            print(f"    -> Best match found *cleaned match* ({highest_clean_score}%). '{best_clean_match.get("title")}'")
+            result = best_clean_match.get("preview")
+        else:
+            if best_match:
+                print(f"    -> Best match found ({highest_score}%), but under the confidence threshold. '{best_match.get("title")}'")
+            else:
+                print(f"Title of spotify music not found in deezer: '{title}' for artist: {primary_artist}")
+            result = None
     
     except requests.exceptions.RequestException as e:
         print(f"Request error: could not search for {title} in deezer. {e}")
-        return None
+        result = None
     except ValueError:
         print(f"Data error: Invalid answer from deezer API searching from {title}")
         return None
     
-    CONFIDENCE_THRESHOLD = 85
-    if highest_score >= CONFIDENCE_THRESHOLD:
-        print(f"    -> Best match found ({highest_score}%). '{best_match.get("title")}'")
-        return best_match.get("preview")
-    elif highest_partial_score >= CONFIDENCE_THRESHOLD:
-        print(f"    -> Best match found *partial match* ({highest_partial_score}%). '{best_partial_match.get("title")}'")
-        return best_partial_match.get("preview")
-    elif highest_clean_score >= CONFIDENCE_THRESHOLD:
-        print(f"    -> Best match found *cleaned match* ({highest_clean_score}%). '{best_clean_match.get("title")}'")
-        return best_clean_match.get("preview")
-    else:
-        if best_match:
-            print(f"    -> Best match found ({highest_score}%), but under the confidence threshold. '{best_match.get("title")}'")
-        print(f"Title of spotify music not found in deezer: '{title}' for artist: {primary_artist}")
-        return None
+    deezer_preview_cache[cache_key] = result
+    return result
