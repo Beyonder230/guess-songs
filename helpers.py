@@ -299,6 +299,24 @@ def _normalize_title(title):
     
     
     
+def _clean_search_title(title):
+    title = re.sub(r'\s*\(\s*', '(', title)
+    title = re.sub(r'\s*\)\s*', ')', title)
+    title = re.sub(r'\([^)]*\)', '', title)
+    
+    title = re.sub(r'\s*\(\s*', '[', title)
+    title = re.sub(r'\s*\)\s*', ']', title)
+    title = re.sub(r'\[[^)]*\]', '', title)
+    
+    title = re.sub(r'\s*-\s*', '-', title)
+    title = re.sub(r'-.*', '', title)
+    final_title = title.strip()
+    
+    return final_title
+    
+    
+    
+    
     
 def get_preview_from_deezer(title, primary_artist):
     if not primary_artist:
@@ -306,8 +324,9 @@ def get_preview_from_deezer(title, primary_artist):
         return None
     
     normalized_spotify_title = _normalize_title(title)
+    clean_spotify_title = _clean_search_title(title)
     
-    safe_title = urllib.parse.quote_plus(title)
+    safe_title = urllib.parse.quote_plus(clean_spotify_title)
     safe_artist = urllib.parse.quote_plus(primary_artist)
     
     api_url = f'https://api.deezer.com/search?q=track:"{safe_title}"artist:"{safe_artist}"'
@@ -325,29 +344,52 @@ def get_preview_from_deezer(title, primary_artist):
         best_match = None
         highest_score = -1
         
+        best_partial_match = None
+        highest_partial_score = -1
+        
+        best_clean_match = None
+        highest_clean_score = -1
+        
         for item in search_results:
             deezer_title = item.get("title", "")
             normalized_deezer_title = _normalize_title(deezer_title)
+            clean_deezer_title = _clean_search_title(deezer_title)
             
             score = fuzz.ratio(normalized_spotify_title, normalized_deezer_title)
+            partial_score = fuzz.partial_ratio(normalized_spotify_title, normalized_deezer_title)
+            clean_score = fuzz.partial_ratio(_normalize_title(clean_deezer_title), _normalize_title(clean_spotify_title))
             
             if score > highest_score:
                 highest_score = score
                 best_match = item
                 
-        CONFIDENCE_THRESHOLD = 85
-        if highest_score >= CONFIDENCE_THRESHOLD:
-            print(f"    -> Best match found ({highest_score}%). '{best_match.get("title")}'")
-            return best_match.get("preview")
-        else:
-            if best_match:
-                print(f"    -> Best match found ({highest_score}%), but under the confidence threshold. '{best_match.get("title")}'")
-            print(f"Title of spotify music not found in deezer: '{title}' for artist: {primary_artist}")
-            return None
+            if partial_score > highest_partial_score:
+                highest_partial_score = partial_score
+                best_partial_match = item
+                
+            if clean_score > highest_clean_score:
+                highest_clean_score = clean_score
+                best_clean_match = item
     
     except requests.exceptions.RequestException as e:
         print(f"Request error: could not search for {title} in deezer. {e}")
         return None
     except ValueError:
         print(f"Data error: Invalid answer from deezer API searching from {title}")
+        return None
+    
+    CONFIDENCE_THRESHOLD = 85
+    if highest_score >= CONFIDENCE_THRESHOLD:
+        print(f"    -> Best match found ({highest_score}%). '{best_match.get("title")}'")
+        return best_match.get("preview")
+    elif highest_partial_score >= CONFIDENCE_THRESHOLD:
+        print(f"    -> Best match found *partial match* ({highest_partial_score}%). '{best_partial_match.get("title")}'")
+        return best_partial_match.get("preview")
+    elif highest_clean_score >= CONFIDENCE_THRESHOLD:
+        print(f"    -> Best match found *cleaned match* ({highest_clean_score}%). '{best_clean_match.get("title")}'")
+        return best_clean_match.get("preview")
+    else:
+        if best_match:
+            print(f"    -> Best match found ({highest_score}%), but under the confidence threshold. '{best_match.get("title")}'")
+        print(f"Title of spotify music not found in deezer: '{title}' for artist: {primary_artist}")
         return None
