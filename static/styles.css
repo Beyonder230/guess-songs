@@ -54,8 +54,8 @@
 }
 
 #config-button {
-    text-align: right !important;
-    margin: 30px !important;
+    text-align: right;
+    margin: 30px;
 }
 
 .clickable:hover {
@@ -173,7 +173,7 @@ a:hover, button:hover {
     top: 50%;
     left: 50%;
     width: 90%;
-    max-width: 450px;
+    max-width: 600px;
     background-color: white;
     transform: translate(-50%, -50%);
     padding: 25px 30px;
@@ -377,4 +377,52 @@ body, main, button, a {
     background: #81b71a;
     border-radius: 50%;
     border: none;
+}
+
+.form-switch {
+    font-size: 20px;
+}
+
+body .form-check-input:checked {
+    background-color: #81b71a;
+    border-color: #77a819;
+}
+
+body .form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(129, 183, 26, 0.25);
+    border-color: #77a819;
+}
+
+body .form-check-input::-webkit-slider-thumb {
+    background-color: #81b71a; 
+}
+
+body .form-check-input::-moz-range-thumb {
+    background-color: #81b71a;
+}
+
+.floating-form input  {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        padding: 0.5rem 1rem;
+        width: 100%;
+}
+
+.floating-form input:focus, .floating-form button:focus {
+    border-color: #81b71a;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(129, 183, 26, 0.25);
+}
+
+body .btn-outline-green {
+    background-color: transparent;
+    border: 2px solid #81b71a;
+    color: #81b71a;
+    transition: all 0.3s ease;
+}
+
+body .btn-outline-green:hover {
+    background-color: #81b71a;
+    color: white;
 }

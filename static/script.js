@@ -1,25 +1,35 @@
 function openConfig() {
-    if (document.getElementById("settings").style.display != "block") {
-        document.getElementById("settings").style.display = "block";
+    const settings = document.getElementById("settings");
+
+    if (settings.classList.contains("active")) {
+        settings.classList.remove("active");
+        document.getElementById("page-overlay").classList.remove("active");
     } else {
-        document.getElementById("settings").style.display = "none";
+        settings.classList.add("active");
+        document.getElementById("page-overlay").classList.add("active");
     }
 }
 
 function closeConfig() {
-    document.getElementById("settings").style.display = "none";
+    document.getElementById("settings").classList.remove("active");
+    document.getElementById("page-overlay").classList.remove("active");
 }
 
 function openCustom() {
-    if (document.getElementById("custom").style.display != "block") {
-        document.getElementById("custom").style.display = "block";
+    const customForm = document.getElementById("custom");
+
+    if (customForm.classList.contains("active")) {
+        customForm.classList.remove("active");
+        document.getElementById("page-overlay").classList.remove("active");
     } else {
-        document.getElementById("custom").style.display = "none";
+        customForm.classList.add("active");
+        document.getElementById("page-overlay").classList.add("active");
     }
 }
 
 function closeCustom() {
-    document.getElementById("custom").style.display = "none";
+    document.getElementById("custom").classList.remove("active");
+    document.getElementById("page-overlay").classList.remove("active");
 }
 
 function customValidation() {
@@ -96,6 +106,8 @@ function customValidation() {
 
 function customGameLoading() {
     const loadings = document.getElementsByClassName("spinner-border");
+    document.getElementById("custom_game_button").classList.add("disabled");
+
     if (loadings.length < 1) {
         const newDiv = document.createElement("div");
         newDiv.classList.add("spinner-border", "text-success", "d-flex", "justify-content-center", "m-3");
