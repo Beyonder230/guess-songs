@@ -117,6 +117,8 @@ let played = false;
 let countdownInterval;
 let answered = false;
 let correctAnswerId;
+let playableTracksSize;
+let score;
 
 function startGame(time) {
     initializeAudioPlayer();
@@ -178,12 +180,6 @@ function initializeAudioPlayer() {
         audio.currentTime = seekBar.value;
         currentTimeDisplay.textContent = formatTime(seekBar.value);
     });
-
-    seekBar.addEventListener("change", () => {
-        if (!audio.paused) {
-            animationFrameId = requestAnimationFrame(updateSeekBar);
-        }
-    });
 }
 
 function formatTime(seconds) {
@@ -193,21 +189,36 @@ function formatTime(seconds) {
 }
 
 function gameWin() {
+    const endgameDiv = document.getElementById("endgame");
     const message = document.getElementById("endgame_message");
-    message.innerText = "you won!".toUpperCase();
-    message.style.color = "green";
+    const icon = document.getElementById("endgame_icon");
+    const stats = document.getElementById('endgame_stats');
 
-    // document.getElementById("endgame").style.display = "block";
+    endgameDiv.classList.remove('victory', 'defeat');
+
+    message.innerText = "you won!".toUpperCase();
+    endgameDiv.classList.add("victory");
+    icon.className = "fa-solid fa-trophy";
+    stats.textContent = `Your score: ${score}/${score + playableTracksSize}`;
+
     document.getElementById("endgame").classList.add("active");
     document.getElementById("page-overlay").classList.add("active");
 }
 
 function gameLose() {
+    const endgameDiv = document.getElementById("endgame");
     const message = document.getElementById("endgame_message");
-    message.innerText = "you lost!".toUpperCase();
-    message.style.color = "red";
+    const icon = document.getElementById("endgame_icon");
+    const stats = document.getElementById('endgame_stats');
 
-    // document.getElementById("endgame").style.display = "block";
+    endgameDiv.classList.remove('victory', 'defeat');
+
+    message.innerText = "you lost!".toUpperCase();
+    endgameDiv.classList.add("defeat");
+    icon.className = "fa-solid fa-face-sad-tear";
+    stats.textContent = `Your score: ${score}/${score + playableTracksSize}`;
+
+
     document.getElementById("endgame").classList.add("active");
     document.getElementById("page-overlay").classList.add("active");
 }
@@ -274,6 +285,8 @@ async function getData() {
 
         if (data.error)
             throw new Error(`Server data error: ${data.error}`);
+
+        playableTracksSize = data.playable_tracks_size;
 
         if (data.win === true)
             return gameWin();
@@ -421,7 +434,8 @@ async function check_answer(object) {
         const resultData = await response.json();
 
         const current_score = document.getElementById("current_score");
-        current_score.innerHTML = resultData.score.toString();
+        score = resultData.score;
+        current_score.innerHTML = score.toString();
         const max_score = document.getElementById("biggest_score");
         max_score.innerHTML = resultData.max_score.toString();
 

@@ -103,8 +103,13 @@
     {% endwith %}
 
     <div id="endgame" class="floating-form shadow-lg">
-    
+        <div class="text-center">
+             <i id="endgame_icon"></i>
+        </div>
+
         <h2 id="endgame_message" class="text-center"></h2><br><br>
+
+        <div id="endgame_stats" class="text-center"></div>
     
         <div class="d-flex flex-column align-items-center gap-3 mb-3">
     
@@ -112,7 +117,7 @@
                 <form action="/{{gamemode}}" method="POST">
                     <input type="hidden" name="url" value="{{url}}">
                     <input type="hidden" name="time" value="{{time}}">
-                    <button id="play_again_button" type="submit" class="btn btn-green w-100 text-white">
+                    <button id="play_again_button" type="submit" class="btn w-100 text-white">
                         PLAY AGAIN
                     </button>
                 </form>
@@ -120,7 +125,7 @@
     
             <div class="w-75">
                 <form action="/gamemodes" method="get">
-                    <button id="return_button" type="submit" class="btn btn-green w-100 text-white">
+                    <button id="return_button" type="submit" class="btn w-100 text-white">
                         RETURN TO MENU
                     </button>
                 </form>

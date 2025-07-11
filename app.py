@@ -92,7 +92,8 @@ def get_game_data():
     response = make_response(jsonify({
         "win": False,
         "song": chose_track,
-        "options": selected_options
+        "options": selected_options,
+        "playable_tracks_size": len(playable_tracks)
     }))
     
     return response
