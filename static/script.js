@@ -119,17 +119,14 @@ let answered = false;
 let correctAnswerId;
 let playableTracksSize;
 let score;
+const time = document.getElementById("game-container").dataset.time;
 
-function startGame(time) {
+async function startGame() {
     initializeAudioPlayer();
-    getData();
-
-    document.getElementById("song").addEventListener('play', () => {
-        if (played === false) {
-            played = true;
-            startCountdown(time);
-        }
-    });
+    var data = await getData();
+    if (data) {
+        setData(data);
+    }
 }
 
 function initializeAudioPlayer() {
@@ -180,6 +177,13 @@ function initializeAudioPlayer() {
         audio.currentTime = seekBar.value;
         currentTimeDisplay.textContent = formatTime(seekBar.value);
     });
+
+    audio.addEventListener("play", () => {
+        if (played === false) {
+            played = true;
+            startCountdown(time);
+        }
+    });2
 }
 
 function formatTime(seconds) {
@@ -245,7 +249,6 @@ function clear_marks() {
 function preLoadAsset(url) {
     return new Promise((resolve, reject) => {
         const isImage = /\.(jpeg|jpg|gif|png|webp)$/.test(url);
-        const isAudio = /\.(mp3|wav|ogg)$/.test(url);
 
         if (isImage) {
             const img = new Image();
@@ -276,10 +279,7 @@ async function getData() {
 
         playableTracksSize = data.playable_tracks_size;
 
-        if (data.win === true)
-            return gameWin();
-
-        const urlsToPreload = [data.song.preview, ...data.options.map(option => option.image)];
+        const urlsToPreload = [...data.options.map(option => option.image)];
         console.log("3. Assets to preload:", urlsToPreload);
 
         if (!data.song.preview) {
@@ -290,15 +290,10 @@ async function getData() {
         const preloadPromises = urlsToPreload.map(url => preLoadAsset(url));
 
         console.log("4. Awaiting all assets to preload...");
-        const loadedAssets = await Promise.all(preloadPromises);
-
-        const audioAsset = loadedAssets.find(asset => asset.type === "audio");
-        if (audioAsset) {
-            data.song.preview = audioAsset.url;
-        }
+        await Promise.all(preloadPromises);
 
         console.log("5. SUCCESS! All assets have been preloaded.");
-        setData(data);
+        return data;
         
     } catch (error) {
         console.error("ERROR: Failed inside getGame's try-catch block:", error);
@@ -307,6 +302,9 @@ async function getData() {
 }
 
 function setData(data) {
+    if (data.win === true)
+        return gameWin();
+
     // AUDIO
     const audio = document.getElementById("song");
     const audio_source = document.getElementById("song_source");
@@ -431,12 +429,16 @@ async function check_answer(object) {
         show_title(resultData.correct_song_id);
 
         if (resultData.result === "correct") {
+            var nextRoundDataPromise = getData();
             if (rightAnswerSound) {
                 rightAnswerSound.currentTime = 0;
                 rightAnswerSound.play();
             }
-            setTimeout(function () {
-                next_round();
+            setTimeout(async () => {
+                const data = await nextRoundDataPromise;
+                if (data) {
+                    next_round(data);
+                }
             }, 2000);
         } else {
             if (wrongAnswerSound) {
@@ -461,7 +463,7 @@ function clear_selected() {
     });
 }
 
-function next_round() {
+function next_round(data) {
     const play_pause_btn = document.getElementById("play-pause-btn");
     play_pause_btn.textContent = '▶';
 
@@ -474,14 +476,13 @@ function next_round() {
 
     played = false;
     answered = false;
-    getData();
+    setData(data);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     const gameContainer = document.getElementById("game-container");
 
     if (gameContainer) {
-        const time = gameContainer.dataset.time;
-        startGame(time);
+        startGame();
     }
 });
