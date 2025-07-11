@@ -3,7 +3,7 @@ import urllib.parse
 import os
 from dotenv import load_dotenv
 from flask import Flask, render_template, session, request, redirect, flash, jsonify, make_response
-from helpers import get_tracklist
+from helpers import get_tracklist, get_audio_as_base64
 from flask_session import Session
 
 load_dotenv()
@@ -74,6 +74,14 @@ def get_game_data():
         return make_response(jsonify({"win": True}))
 
     chose_track = random.choice(playable_tracks)
+    
+    preview_url = chose_track.get("preview")
+
+    print(f"Fetching audio for '{chose_track.get('title')}'...")
+    audio_data_url = get_audio_as_base64(preview_url)
+    
+    if audio_data_url:
+        chose_track["preview"] = audio_data_url
     
     correct_option = next((opt for opt in options_tracks if opt.get('id') == chose_track.get('id')), None)
     if correct_option is None:

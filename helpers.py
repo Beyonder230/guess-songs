@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 from cachetools import TTLCache
 
+
 load_dotenv()
 deezer_preview_cache = TTLCache(maxsize=5000, ttl=86400)
 spotify_token_cache = TTLCache(maxsize=1, ttl=3500)
@@ -417,3 +418,28 @@ def get_preview_from_deezer(title, primary_artist):
     
     deezer_preview_cache[cache_key] = result
     return result
+
+
+
+
+def get_audio_as_base64(url):
+    """
+    Fetches an audio file from a URL and encodes it into a Base64 Data URL.
+    """
+    if not url:
+        return None
+    try:
+        # Fetch the audio file content
+        response = requests.get(url, timeout=10) # Added a timeout for safety
+        response.raise_for_status()
+        
+        # Get the correct content type (e.g., 'audio/mpeg')
+        content_type = response.headers['Content-Type']
+        # Encode the binary content to a Base64 string
+        encoded_audio = base64.b64encode(response.content).decode('utf-8')
+        
+        return f"data:{content_type};base64,{encoded_audio}"
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching audio for proxy: {e}")
+        return None

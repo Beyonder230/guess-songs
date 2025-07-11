@@ -199,7 +199,7 @@ function gameWin() {
     message.innerText = "you won!".toUpperCase();
     endgameDiv.classList.add("victory");
     icon.className = "fa-solid fa-trophy";
-    stats.textContent = `Your score: ${score}/${score + playableTracksSize}`;
+    stats.textContent = `Your score: ${score}/${score}`;
 
     document.getElementById("endgame").classList.add("active");
     document.getElementById("page-overlay").classList.add("active");
@@ -254,18 +254,6 @@ function preLoadAsset(url) {
             img.onerror = () => reject(new Error(`Error at loading image: ${url}`));
 
             img.src = url;
-        } else if (isAudio) {
-            fetch(url)
-                .then(response => {
-                    if (!response.ok)
-                        throw new Error(`HTTP error at searching for audio: ${response.statusText}`);
-                    return response.blob();
-                })
-                .then(blob => {
-                    const blobUrl = URL.createObjectURL(blob);
-                    resolve({ url: blobUrl, type: "audio" });
-                })
-                .catch(error => reject(error));
         } else {
             resolve(url);
         }
