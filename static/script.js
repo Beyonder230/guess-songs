@@ -289,22 +289,25 @@ async function getData() {
         if (data.error)
             throw new Error(`Server data error: ${data.error}`);
 
-        playableTracksSize = data.playable_tracks_size;
+        if (!data.win) {
+            playableTracksSize = data.playable_tracks_size;
 
-        const urlsToPreload = [...data.options.map(option => option.image)];
-        console.log("3. Assets to preload:", urlsToPreload);
+            const urlsToPreload = [...data.options.map(option => option.image)];
+            console.log("3. Assets to preload:", urlsToPreload);
 
-        if (!data.song.preview) {
-            console.error("CRITICAL ERROR: The received song has no preview URL!");
-            throw new Error("Song without preview received from backend.");
+            if (!data.song.preview) {
+                console.error("CRITICAL ERROR: The received song has no preview URL!");
+                throw new Error("Song without preview received from backend.");
+            }
+
+            const preloadPromises = urlsToPreload.map(url => preLoadAsset(url));
+
+            console.log("4. Awaiting all assets to preload...");
+            await Promise.all(preloadPromises);
+
+            console.log("5. SUCCESS! All assets have been preloaded.");
         }
 
-        const preloadPromises = urlsToPreload.map(url => preLoadAsset(url));
-
-        console.log("4. Awaiting all assets to preload...");
-        await Promise.all(preloadPromises);
-
-        console.log("5. SUCCESS! All assets have been preloaded.");
         return data;
         
     } catch (error) {

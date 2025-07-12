@@ -8,12 +8,15 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 import time
 from cachetools import TTLCache
+import threading
 
 
 load_dotenv()
 deezer_preview_cache = TTLCache(maxsize=5000, ttl=86400)
 spotify_token_cache = TTLCache(maxsize=1, ttl=3500)
 playlist_cache = TTLCache(maxsize=100, ttl=3600)
+
+LOCK = threading.Lock()
 
 def get_access():
     if "access_token" in spotify_token_cache:
@@ -61,17 +64,6 @@ def get_id_from_url(url, type):
     
     
 def get_tracklist(url):
-    if "spotify" in url:
-        return get_spotify_tracklist(url)
-    elif "deezer" in url:
-        return get_deezer_tracklist(url)
-    else:
-        return None
-
-
-
-
-def get_spotify_tracklist(url):
     if "playlist" in url:
         collection = "playlist"
     elif "album" in url:
@@ -88,6 +80,19 @@ def get_spotify_tracklist(url):
     if id in playlist_cache:
         return playlist_cache[id]
     
+    with LOCK:
+        if id in playlist_cache:
+            return playlist_cache[id]
+        
+        if "spotify" in url:
+            return get_spotify_tracklist(id, collection)
+        elif "deezer" in url:
+            return get_deezer_tracklist(id, collection)
+
+
+
+
+def get_spotify_tracklist(id, collection):
     # spotify authentification
     access = get_access()
     if access == None:
@@ -227,21 +232,7 @@ def get_spotify_tracklist(url):
 
 
 
-def get_deezer_tracklist(url):
-    # http info
-    if "playlist" in url:
-        collection = "playlist"
-    elif "album" in url:
-        collection = "album"
-    else:
-        print("Error: could not identify playlist or album in url")
-        return None
-    
-    id = get_id_from_url(url, collection)
-    if id == None:
-        print("Could not get id from url")
-        return None
-    
+def get_deezer_tracklist(id, collection):
     api_url = f"https://api.deezer.com/{collection}/{id}"
     playable_tracks = []
     options_tracks = []
