@@ -130,7 +130,7 @@ let countdownInterval;
 let answered = false;
 let correctAnswerId;
 let playableTracksSize;
-let score;
+let score = 0;
 const time = document.getElementById("game-container").dataset.time;
 
 async function startGame() {

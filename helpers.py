@@ -13,7 +13,7 @@ import random
 
 
 load_dotenv()
-deezer_preview_cache = TTLCache(maxsize=5000, ttl=86400)
+deezer_id_cache = TTLCache(maxsize=10000, ttl=864000)
 spotify_token_cache = TTLCache(maxsize=1, ttl=3500)
 playlist_cache = TTLCache(maxsize=100, ttl=3600)
 
@@ -174,10 +174,10 @@ def get_spotify_tracklist(id, collection):
             artists_list = track_data.get("artists", [])
             artist = artists_list[0].get("name") if len(artists_list) > 0 else None
             
-            if (title, artist) in deezer_preview_cache:
-                preview = deezer_preview_cache[(title, artist)]
-            else:
+            if track_data.get("preview_url"):
                 preview = track_data.get("preview_url")
+            else:
+                preview = get_preview_from_deezer(title, artist)
             
             playable_track = {
                 "id": id_counter,
@@ -333,9 +333,10 @@ def get_preview_from_deezer(title, primary_artist):
         return None
     
     cache_key = (title, primary_artist)
-    if cache_key in deezer_preview_cache and is_preview_url_valid(deezer_preview_cache[cache_key]):
-        return deezer_preview_cache[cache_key]
-    
+    if (title, primary_artist) in deezer_id_cache:
+        return get_preview_with_id(title, primary_artist)
+    deezer_id = None
+        
     normalized_spotify_title = _normalize_title(title)
     clean_spotify_title = _clean_search_title(title)
     
@@ -387,12 +388,15 @@ def get_preview_from_deezer(title, primary_artist):
         CONFIDENCE_THRESHOLD = 85
         if highest_score >= CONFIDENCE_THRESHOLD:
             print(f"    -> Best match found ({highest_score}%). '{best_match.get("title")}'")
+            deezer_id = best_match.get("id")
             result = best_match.get("preview")
         elif highest_partial_score >= CONFIDENCE_THRESHOLD:
             print(f"    -> Best match found *partial match* ({highest_partial_score}%). '{best_partial_match.get("title")}'")
+            deezer_id = best_partial_match.get("id")
             result = best_partial_match.get("preview")
         elif highest_clean_score >= CONFIDENCE_THRESHOLD:
             print(f"    -> Best match found *cleaned match* ({highest_clean_score}%). '{best_clean_match.get("title")}'")
+            deezer_id = best_clean_match.get("id")
             result = best_clean_match.get("preview")
         else:
             if best_match:
@@ -408,7 +412,7 @@ def get_preview_from_deezer(title, primary_artist):
         print(f"Data error: Invalid answer from deezer API searching from {title}")
         return None
     
-    deezer_preview_cache[cache_key] = result
+    deezer_id_cache[cache_key] = deezer_id
     return result
 
 
@@ -437,19 +441,6 @@ def get_audio_as_base64(url):
         return None
     
     
-    
-    
-def is_preview_url_valid(url):
-    if not url:
-        return False
-    
-    try:
-        response = requests.head(url, timeout=5)
-        return response.ok
-    except:
-        return False
-    
-    
 
 
 def cache_playlist_validation(id):
@@ -466,9 +457,39 @@ def cache_playlist_validation(id):
         sample_track = random.choice(playable_tracks)
         sample_url = sample_track.get("preview")
         
-        if is_preview_url_valid(sample_url):
+        if get_audio_as_base64(sample_url):
             return True
         else:
             return False
     else:
         return False
+    
+
+
+
+def get_preview_with_id(title, artist):
+    if (title, artist) in deezer_id_cache:
+        id = deezer_id_cache[(title, artist)]
+    else:
+        return None
+
+    if not id:
+        print(f"id '{id}' not in cache.")
+        return None
+    
+    api_url = f'https://api.deezer.com/track/{id}'
+    
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
+        
+        result = data.get("preview")
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: could not search for id '{id}' in deezer. {e}")
+        result = None
+    except ValueError:
+        print(f"Data error: Invalid answer from deezer API searching from id '{id}'")
+        return None
+    
+    return result
