@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 from cachetools import TTLCache
 import threading
+import random
 
 
 load_dotenv()
@@ -77,11 +78,11 @@ def get_tracklist(url):
         print("Could not get id from url")
         return None
     
-    if id in playlist_cache:
+    if cache_playlist_validation(id):
         return playlist_cache[id]
-    
+        
     with LOCK:
-        if id in playlist_cache:
+        if cache_playlist_validation(id):
             return playlist_cache[id]
         
         if "spotify" in url:
@@ -332,7 +333,7 @@ def get_preview_from_deezer(title, primary_artist):
         return None
     
     cache_key = (title, primary_artist)
-    if cache_key in deezer_preview_cache:
+    if cache_key in deezer_preview_cache and is_preview_url_valid(deezer_preview_cache[cache_key]):
         return deezer_preview_cache[cache_key]
     
     normalized_spotify_title = _normalize_title(title)
@@ -434,3 +435,40 @@ def get_audio_as_base64(url):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching audio for proxy: {e}")
         return None
+    
+    
+    
+    
+def is_preview_url_valid(url):
+    if not url:
+        return False
+    
+    try:
+        response = requests.head(url, timeout=5)
+        return response.ok
+    except:
+        return False
+    
+    
+
+
+def cache_playlist_validation(id):
+    if not id:
+        return False
+    
+    if id not in playlist_cache:
+        return False
+    
+    cached_data = playlist_cache[id]
+    playable_tracks = cached_data.get("playable_tracks", [])
+    
+    if playable_tracks:
+        sample_track = random.choice(playable_tracks)
+        sample_url = sample_track.get("preview")
+        
+        if is_preview_url_valid(sample_url):
+            return True
+        else:
+            return False
+    else:
+        return False

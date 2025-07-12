@@ -316,15 +316,28 @@ async function getData() {
     }
 }
 
-function setData(data) {
+async function setData(data) {
     if (data.win === true)
         return gameWin();
 
     // AUDIO
     const audio = document.getElementById("song");
     const audio_source = document.getElementById("song_source");
-    audio_source.src = data.song.preview;
-    audio.load();
+
+    if (data.song && data.song.preview) {
+        audio_source.src = data.song.preview;
+        audio.load();
+    } else {
+        showTemporaryMessage("Unable to load this song, skipping...");
+        const nextRoundDataPromise = getData();
+        setTimeout(async () => {
+            data = await nextRoundDataPromise;
+            if (data) {
+                next_round(data);
+            }
+        }, 2000);
+    }
+
 
     // OPTIONS
     const options = document.querySelectorAll(".option-button");
@@ -492,6 +505,17 @@ function next_round(data) {
     played = false;
     answered = false;
     setData(data);
+}
+
+function showTemporaryMessage(text) {
+    const messageElement = document.getElementById("game-message-area");
+    if (messageElement) {
+        messageElement.textContent = text;
+        messageElement.style.display = 'block';
+        setTimeout(() => {
+            messageElement.style.display = 'none';
+        }, 2000);
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
