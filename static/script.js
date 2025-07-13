@@ -195,7 +195,9 @@ function initializeAudioPlayer() {
             played = true;
             startCountdown(time);
         }
-    });2
+    });
+
+    setupVolumePopup();
 }
 
 function formatTime(seconds) {
@@ -516,6 +518,24 @@ function showTemporaryMessage(text) {
             messageElement.style.display = 'none';
         }, 2000);
     }
+}
+
+function setupVolumePopup() {
+    const volumeBtn = document.getElementById('volume-btn');
+    const volumePopup = document.getElementById('volume-popup');
+
+    if (!volumeBtn || !volumePopup) return;
+
+    volumeBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        volumePopup.classList.toggle('active');
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!volumePopup.contains(event.target) && !volumeBtn.contains(event.target)) {
+            volumePopup.classList.remove('active');
+        }
+    });
 }
 
 document.addEventListener("DOMContentLoaded", () => {

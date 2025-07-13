@@ -20,8 +20,16 @@
                 <input type="range" id="seek-bar" class="seek-bar" value="0" step="1">
                 <span id="duration-display" class="time-display">0:00</span>
 
-                <div class="volume-container d-flex align-items-center">
-                    <img src="/static/sound.png" alt="Volume" height="24" width="24" /> <input type="range" id="volume-bar" class="volume-bar" min="0" max="100" value="15">
+                <div class="volume-container position-relative">
+                    
+                    <button id="volume-btn" class="volume-button">
+                        <img src="/static/sound.png" alt="Volume" height="24" width="24" />
+                    </button>
+                    
+                    <div id="volume-popup" class="volume-popup">
+                        <input type="range" id="volume-bar" class="volume-bar" min="0" max="100" value="15" orient="vertical">
+                    </div>
+
                 </div>
             </div>
 

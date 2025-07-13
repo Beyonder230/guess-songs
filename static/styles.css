@@ -352,13 +352,16 @@ body, main, button, a {
 .volume-bar {
     -webkit-appearance: none;
     appearance: none;
-    width: 80px;
-    height: 6px;
-    background: #adb5bd;
+    background: #495057;
+    transform: rotate(-90deg);
     border-radius: 5px;
     outline: none;
     cursor: pointer;
     transition: all 0.2s ease;
+    width: 100px;
+    height: 8px;
+
+    transform: rotate(-90deg);
 }
 
 .volume-bar::-webkit-slider-thumb {
@@ -369,6 +372,8 @@ body, main, button, a {
     background: #81b71a;
     border-radius: 50%;
     margin-top: -5px;
+
+    transform: translateY(2px);
 }
 
 .volume-bar::-moz-range-thumb {
@@ -425,4 +430,39 @@ body .btn-outline-green {
 body .btn-outline-green:hover {
     background-color: #81b71a;
     color: white;
+}
+
+.volume-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.volume-popup {
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 50px;
+    height: 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background-color: #212529;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease-in-out;
+}
+
+.volume-popup.active {
+    opacity: 1;
+    visibility: visible;
+    bottom: 100%;
 }
