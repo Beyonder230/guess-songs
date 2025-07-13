@@ -153,11 +153,17 @@ function initializeAudioPlayer() {
 
     audio.volume = volumeBar.value / 100;
 
+    audio.addEventListener('canplay', () => {
+        playPauseBtn.disabled = false;
+        playPauseBtn.textContent = '▶';
+    });
+
     volumeBar.addEventListener("input", () => {
         audio.volume = volumeBar.value / 100;
     });
 
     playPauseBtn.addEventListener("click", () => {
+        if (audio.load)
         if (audio.paused) {
             playPauseBtn.textContent = "❚❚";
             audio.play();
@@ -319,6 +325,11 @@ async function getData() {
 }
 
 async function setData(data) {
+    const playPauseBtn = document.getElementById("play-pause-btn");
+
+    playPauseBtn.disabled = true;
+    playPauseBtn.textContent = "...";
+
     if (data.win === true)
         return gameWin();
 
