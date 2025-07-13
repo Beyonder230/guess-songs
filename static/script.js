@@ -124,6 +124,22 @@ function customGameLoading() {
     }
 }
 
+function setupAutoplay() {
+    const autoplaySwitch = document.getElementById("autoplay-switch");
+    const autoplayStorageKey = "guessSongs-autoplayEnabled";
+
+    const savedPreference = localStorage.getItem(autoplayStorageKey);
+    let isAutoplayEnabled = savedPreference === "true";
+
+    autoplaySwitch.checked = isAutoplayEnabled;
+
+    autoplaySwitch.addEventListener("change", () => {
+        isAutoplayEnabled = autoplaySwitch.checked;
+
+        localStorage.setItem(autoplayStorageKey, isAutoplayEnabled);
+    });
+}
+
 // MAIN GAME LOGIC ================================================================================================================================================================
 let played = false;
 let countdownInterval;
@@ -131,7 +147,10 @@ let answered = false;
 let correctAnswerId;
 let playableTracksSize;
 let score = 0;
-const time = document.getElementById("game-container").dataset.time;
+const gameContainer = document.getElementById("game-container");
+if (gameContainer) {
+    time = gameContainer.dataset.time;
+}
 
 async function startGame() {
     initializeAudioPlayer();
@@ -153,7 +172,7 @@ function initializeAudioPlayer() {
 
     audio.volume = volumeBar.value / 100;
 
-    audio.addEventListener('canplay', () => {
+    audio.addEventListener("canplay", () => {
         playPauseBtn.disabled = false;
         playPauseBtn.textContent = '▶';
     });
@@ -163,9 +182,7 @@ function initializeAudioPlayer() {
     });
 
     playPauseBtn.addEventListener("click", () => {
-        if (audio.load)
         if (audio.paused) {
-            playPauseBtn.textContent = "❚❚";
             audio.play();
         }
         else {
@@ -201,6 +218,7 @@ function initializeAudioPlayer() {
             played = true;
             startCountdown(time);
         }
+        playPauseBtn.textContent = "❚❚";
     });
 
     setupVolumePopup();
@@ -336,10 +354,17 @@ async function setData(data) {
     // AUDIO
     const audio = document.getElementById("song");
     const audio_source = document.getElementById("song_source");
+    const isAutoplayEnabled = localStorage.getItem("guessSongs-autoplayEnabled") === "true";
 
     if (data.song && data.song.preview) {
         audio_source.src = data.song.preview;
         audio.load();
+
+        if (isAutoplayEnabled) {
+            setTimeout(() => {
+                audio.play().catch(e => console.error("Error at trying autoplay:", e));
+            }, 100);
+        }
     } else {
         showTemporaryMessage("Unable to load this song, skipping...");
         const nextRoundDataPromise = getData();
@@ -554,5 +579,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (gameContainer) {
         startGame();
+    }
+
+    if (document.getElementById("autoplay-switch")) {
+        setupAutoplay();
     }
 });
