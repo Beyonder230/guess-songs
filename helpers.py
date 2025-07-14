@@ -47,7 +47,7 @@ def get_access():
         spotify_token_cache["access_token"] = response_data["access_token"]
         return response_data["access_token"]
     else:
-        print("Token generating error", response_data)
+        #print("Token generating error", response_data)
         return None
 
 
@@ -70,12 +70,12 @@ def get_tracklist(url):
     elif "album" in url:
         collection = "album"
     else:
-        print("Error: could not identify playlist or album in url")
+        #print("Error: could not identify playlist or album in url")
         return None
     
     id = get_id_from_url(url, collection)
     if not id:
-        print("Could not get id from url")
+        #print("Could not get id from url")
         return None
     
     if cache_playlist_validation(id):
@@ -97,7 +97,7 @@ def get_spotify_tracklist(id, collection):
     # spotify authentification
     access = get_access()
     if access == None:
-        print("Authentification Error")
+        #print("Authentification Error")
         return None
     
     BASE_URL = "https://api.spotify.com/v1"
@@ -128,7 +128,7 @@ def get_spotify_tracklist(id, collection):
         elif collection == "playlist":
             api_url = f"{BASE_URL}/playlists/{id}/tracks?limit=100&fields={encoded_fields}"
     except requests.exceptions.RequestException as e:
-        print(f"Error at first spotify API call: {e}")
+        #print(f"Error at first spotify API call: {e}")
         return None
     
     playable_tracks, options_tracks = [], []
@@ -141,10 +141,10 @@ def get_spotify_tracklist(id, collection):
             response.raise_for_status()
             data = response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Error at spotify API request. {e}")
+            #print(f"Error at spotify API request. {e}")
             return None
         except ValueError:
-            print(f"Error at processing data from the spotify API")
+            #print(f"Error at processing data from the spotify API")
             return None
         
         if first_call:
@@ -223,8 +223,8 @@ def get_spotify_tracklist(id, collection):
             track["preview"] = found_previews[track.get("id")]
             tracks_with_preview.append(track)
         
-    print(f"Length of total tracks get from spotify: {len(options_tracks)}")
-    print(f"Length of playable tracks get from spotify: {len(tracks_with_preview)}")
+    #print(f"Length of total tracks get from spotify: {len(options_tracks)}")
+    #print(f"Length of playable tracks get from spotify: {len(tracks_with_preview)}")
     #print(f"called URL: {url}")
     
     playlist_cache[id] = {"playable_tracks": tracks_with_preview, "options_tracks": options_tracks, "total_tracks": total_tracks}
@@ -246,10 +246,10 @@ def get_deezer_tracklist(id, collection):
             response.raise_for_status()
             data = response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Error at deezer API request. {e}")
+            #print(f"Error at deezer API request. {e}")
             return None
         except ValueError:
-            print(f"Error at processing data from the deezer API")
+            #print(f"Error at processing data from the deezer API")
             return None
         
         if first_call == True:
@@ -264,9 +264,12 @@ def get_deezer_tracklist(id, collection):
             if not track_data:
                 continue
             
+            title = track_data.get("title")
+            artist = track_data.get("artist", {}).get("name")
+            
             options_track = {
                 "id": id_counter,
-                "title": track_data.get("title"),
+                "title": title,
                 "image": track_data.get("album", {}).get("cover_medium", "/static/default_cover.png") if collection == "playlist" else album_cover
             }
             options_tracks.append(options_track)
@@ -275,17 +278,23 @@ def get_deezer_tracklist(id, collection):
             if preview_url:
                 playable_track = {
                     "id": id_counter,
-                    "preview": preview_url
+                    "preview": preview_url,
+                    "artist": artist,
+                    "title": title
                 }
                 playable_tracks.append(playable_track)
+            
+            cache_key = (title, artist)
+            if cache_key not in deezer_id_cache:
+                deezer_id_cache[cache_key] = track_data.get("id")
             
             id_counter += 1
         
         api_url = data.get("next")
         first_call = False
         
-    print(f"Length of total tracks get from deezer: {len(options_tracks)}")
-    print(f"Length of playable tracks get from deezer: {len(playable_tracks)}")
+    #print(f"Length of total tracks get from deezer: {len(options_tracks)}")
+    #print(f"Length of playable tracks get from deezer: {len(playable_tracks)}")
     #print(f"called URL: {url}")
 
     return {"playable_tracks": playable_tracks, "options_tracks": options_tracks, "total_tracks": total_tracks}
@@ -329,11 +338,11 @@ def _clean_search_title(title):
     
 def get_preview_from_deezer(title, primary_artist):
     if not primary_artist or not title:
-        print(f"Not found artist '{primary_artist}' or title '{title}'")
+        #print(f"Not found artist '{primary_artist}' or title '{title}'")
         return None
     
     cache_key = (title, primary_artist)
-    if (title, primary_artist) in deezer_id_cache:
+    if cache_key in deezer_id_cache:
         return get_preview_with_id(title, primary_artist)
     deezer_id = None
         
@@ -352,7 +361,7 @@ def get_preview_from_deezer(title, primary_artist):
         
         search_results = data.get("data", [])
         if not search_results:
-            print(f"Spotify music '{title}' for artist {primary_artist} could not find a deezer version")
+            #print(f"Spotify music '{title}' for artist {primary_artist} could not find a deezer version")
             result = None
 
         best_match = None
@@ -387,29 +396,29 @@ def get_preview_from_deezer(title, primary_artist):
                 
         CONFIDENCE_THRESHOLD = 85
         if highest_score >= CONFIDENCE_THRESHOLD:
-            print(f"    -> Best match found ({highest_score}%). '{best_match.get("title")}'")
+            #print(f"    -> Best match found ({highest_score}%). '{best_match.get("title")}'")
             deezer_id = best_match.get("id")
             result = best_match.get("preview")
         elif highest_partial_score >= CONFIDENCE_THRESHOLD:
-            print(f"    -> Best match found *partial match* ({highest_partial_score}%). '{best_partial_match.get("title")}'")
+            #print(f"    -> Best match found *partial match* ({highest_partial_score}%). '{best_partial_match.get("title")}'")
             deezer_id = best_partial_match.get("id")
             result = best_partial_match.get("preview")
         elif highest_clean_score >= CONFIDENCE_THRESHOLD:
-            print(f"    -> Best match found *cleaned match* ({highest_clean_score}%). '{best_clean_match.get("title")}'")
+            #print(f"    -> Best match found *cleaned match* ({highest_clean_score}%). '{best_clean_match.get("title")}'")
             deezer_id = best_clean_match.get("id")
             result = best_clean_match.get("preview")
         else:
-            if best_match:
-                print(f"    -> Best match found ({highest_score}%), but under the confidence threshold. '{best_match.get("title")}'")
-            else:
-                print(f"Title of spotify music not found in deezer: '{title}' for artist: {primary_artist}")
+            #if best_match:
+                #print(f"    -> Best match found ({highest_score}%), but under the confidence threshold. '{best_match.get("title")}'")
+            #else:
+                #print(f"Title of spotify music not found in deezer: '{title}' for artist: {primary_artist}")
             result = None
     
     except requests.exceptions.RequestException as e:
-        print(f"Request error: could not search for {title} in deezer. {e}")
+        #print(f"Request error: could not search for {title} in deezer. {e}")
         result = None
     except ValueError:
-        print(f"Data error: Invalid answer from deezer API searching from {title}")
+        #print(f"Data error: Invalid answer from deezer API searching from {title}")
         return None
     
     deezer_id_cache[cache_key] = deezer_id
@@ -437,7 +446,7 @@ def get_audio_as_base64(url):
         return f"data:{content_type};base64,{encoded_audio}"
         
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching audio for proxy: {e}")
+        #print(f"Error fetching audio for proxy: {e}")
         return None
     
     
@@ -474,7 +483,7 @@ def get_preview_with_id(title, artist):
         return None
 
     if not id:
-        print(f"id '{id}' not in cache.")
+        #print(f"id '{id}' not in cache.")
         return None
     
     api_url = f'https://api.deezer.com/track/{id}'
@@ -486,10 +495,10 @@ def get_preview_with_id(title, artist):
         
         result = data.get("preview")
     except requests.exceptions.RequestException as e:
-        print(f"Request error: could not search for id '{id}' in deezer. {e}")
+        #print(f"Request error: could not search for id '{id}' in deezer. {e}")
         result = None
     except ValueError:
-        print(f"Data error: Invalid answer from deezer API searching from id '{id}'")
+        #print(f"Data error: Invalid answer from deezer API searching from id '{id}'")
         return None
     
     return result

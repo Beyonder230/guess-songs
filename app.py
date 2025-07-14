@@ -76,7 +76,7 @@ def get_game_data():
     chose_track = random.choice(playable_tracks)
     
     preview_url = chose_track.get("preview")
-    print(f"Fetching audio for '{chose_track.get('title')}'...")
+    #print(f"Fetching audio for '{chose_track.get('title')}'...")
     audio_data_url = get_audio_as_base64(preview_url)
     
     if audio_data_url:
@@ -209,5 +209,3 @@ def singleplayer():
 
 
 
-if __name__ == "__main__":
-    app.run(debug=True)

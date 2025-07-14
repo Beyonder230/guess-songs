@@ -303,14 +303,14 @@ function preLoadAsset(url) {
 
 async function getData() {
     try {
-        console.log("1. Fetching next round data...");
+        //console.log("1. Fetching next round data...");
         const response = await fetch("/get_game_data");
 
         if (!response.ok)
             throw new Error(`HTTP error! Status: ${response.status}`);
 
         const data = await response.json();
-        console.log("2. Data received from backend:", data);
+        //console.log("2. Data received from backend:", data);
 
         if (data.error)
             throw new Error(`Server data error: ${data.error}`);
@@ -319,7 +319,7 @@ async function getData() {
             playableTracksSize = data.playable_tracks_size;
 
             const urlsToPreload = [...data.options.map(option => option.image)];
-            console.log("3. Assets to preload:", urlsToPreload);
+            //console.log("3. Assets to preload:", urlsToPreload);
 
             if (!data.song.preview) {
                 console.error("CRITICAL ERROR: The received song has no preview URL!");
@@ -328,16 +328,16 @@ async function getData() {
 
             const preloadPromises = urlsToPreload.map(url => preLoadAsset(url));
 
-            console.log("4. Awaiting all assets to preload...");
+            //console.log("4. Awaiting all assets to preload...");
             await Promise.all(preloadPromises);
 
-            console.log("5. SUCCESS! All assets have been preloaded.");
+            //console.log("5. SUCCESS! All assets have been preloaded.");
         }
 
         return data;
         
     } catch (error) {
-        console.error("ERROR: Failed inside getGame's try-catch block:", error);
+        //console.error("ERROR: Failed inside getGame's try-catch block:", error);
         alert("Could not load the page! Please try to reload the page.");
     }
 }
@@ -516,7 +516,7 @@ async function check_answer(object) {
             }, 2000);
         }
     } catch (error) {
-        console.log("Error at checking answer:", error);
+        //console.log("Error at checking answer:", error);
         answered = false;
     }
 }
