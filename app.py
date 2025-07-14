@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, session, request, redirect, flash, jsonify, make_response
 from helpers import get_tracklist, get_audio_as_base64, get_preview_with_id
 from flask_session import Session
+from whitenoise import WhiteNoise
 
 load_dotenv()
 
@@ -12,7 +13,10 @@ app = Flask(__name__)
 app.config["SESSION_TYPE"] = "filesystem"
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 
+
 Session(app)
+
+app.wsgi_app = WhiteNoise(app.wsgi_app, root="static/")
 
 
 
