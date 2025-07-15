@@ -285,9 +285,3 @@ def game_page():
     url = session.get("original_url", {})
     
     return render_template("game.html", bigger_score=max_score, gamemode=gamemode, time=time, url=url)
-
-
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
