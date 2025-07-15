@@ -134,6 +134,7 @@ def get_spotify_tracklist(id, collection):
     playable_tracks, options_tracks = [], []
     id_counter, total_tracks = 1, 0
     first_call = True
+    found_tracks = set()
     
     while api_url:
         try:
@@ -157,6 +158,14 @@ def get_spotify_tracklist(id, collection):
             if not track_data or not track_data.get("name"):
                 continue
             
+            title = track_data.get("name")
+            
+            artists_list = track_data.get("artists", [])
+            artist = artists_list[0].get("name") if len(artists_list) > 0 else None
+            
+            if (title, artist) in found_tracks:
+                continue
+            
             image_url = album_cover_url if collection == "album" else None
             if not image_url:
                 track_album_images  = track_data.get("album", {}).get("images", []) 
@@ -168,11 +177,6 @@ def get_spotify_tracklist(id, collection):
                 "image": image_url
             }
             options_tracks.append(options_track)
-            
-            title = track_data.get("name")
-            
-            artists_list = track_data.get("artists", [])
-            artist = artists_list[0].get("name") if len(artists_list) > 0 else None
             
             if track_data.get("preview_url"):
                 preview = track_data.get("preview_url")
@@ -187,6 +191,7 @@ def get_spotify_tracklist(id, collection):
             }
             playable_tracks.append(playable_track)
             
+            found_tracks.add((title, artist))
             id_counter += 1
           
         if len(playable_tracks) >= 150:
@@ -198,7 +203,6 @@ def get_spotify_tracklist(id, collection):
     tracks_with_preview = [track for track in playable_tracks if track["preview"]]
     tracks_without_preview = [track for track in playable_tracks if not track["preview"]]
     found_previews = {}
-    used_previews = set()
     
     if tracks_without_preview:
         batch_size = 50
@@ -212,9 +216,8 @@ def get_spotify_tracklist(id, collection):
                 results = list(executor.map(lambda p: get_preview_from_deezer(*p), args))
             
                 for j, track in enumerate(batch_of_tracks):
-                    if results[j] and results[j] not in used_previews:
+                    if results[j]:
                         found_previews[track.get("id")] = results[j]
-                        used_previews.add(results[j])
                     
             time.sleep(1)
         
