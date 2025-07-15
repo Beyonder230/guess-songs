@@ -252,10 +252,16 @@ def task_status(task_id):
         
         if not tracklist:
             flash("Couldn't load the playlist. Please check if the link is correct and make sure the playlist is public.")
-            return redirect("/gamemodes")
+            return jsonify({
+                "status": "completed",
+                "redirect_url": url_for("gamemodes")
+            })
         elif len(tracklist.get("playable_tracks", [])) < 5:
             flash("This playlist is a bit short! Please choose a playlist or album with at least 5 playable tracks.")
-            return redirect("/gamemodes")
+            return jsonify({
+                "status": "completed",
+                "redirect_url": url_for("gamemodes")
+            })
 
         total_tracks = tracklist.get("total_tracks", 0)
         loaded_tracks = len(tracklist.get("options_tracks", []))
