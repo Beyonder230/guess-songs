@@ -2,10 +2,11 @@ import random
 import urllib.parse
 import os
 from dotenv import load_dotenv
-from flask import Flask, render_template, session, request, redirect, flash, jsonify, make_response
-from helpers import get_tracklist, get_audio_as_base64, get_preview_with_id
+from flask import Flask, render_template, session, request, redirect, flash, jsonify, make_response, url_for
+from helpers import get_tracklist, get_audio_as_base64, get_preview_with_id, get_id_from_url, get_playlist_in_cache
 from flask_session import Session
 from whitenoise import WhiteNoise
+import threading
 
 load_dotenv()
 
@@ -20,6 +21,7 @@ app.wsgi_app = WhiteNoise(app.wsgi_app, root="static/")
 
 
 
+TASK_STATUS = {}
 
 def get_max_score(gamemode, current_score, cookies):
     cookie_name = f"{gamemode}_score"
@@ -157,48 +159,50 @@ def check_answer():
         
     
 def start_game(url, gamemode, time):
-    tracklist = get_tracklist(url)
+    if "playlist" in url:
+        collection = "playlist"
+    elif "album" in url:
+        collection = "album"
+    else:
+        return None
     
-    if not tracklist:
-        flash("Couldn't load the playlist. Please check if the link is correct and make sure the playlist is public.")
-        return redirect("/gamemodes")
-    elif len(tracklist.get("playable_tracks", [])) < 5:
-        flash("This playlist is a bit short! Please choose a playlist or album with at least 5 playable tracks.")
-        return redirect("/gamemodes")
-
-    total_tracks = tracklist.get("total_tracks", 0)
-    loaded_tracks = len(tracklist.get("options_tracks", []))
+    id = get_id_from_url(url, collection)  
     
-    if total_tracks > loaded_tracks and loaded_tracks > 0:
-        flash(f"Warning: This playlist is too big! The game was loaded with the first {loaded_tracks} tracks.")
-
-    session["tracklist"] = tracklist
-    session["score"] = 0
-    session.modified = True
+    if TASK_STATUS.get(id) == "processing":
+        return jsonify({"message": "This playlist is beeing processed", "task_id": id})  
+    
+    thread = threading.Thread(target=process_playlist_thread, args=(url, id))
+    thread.start()
     
     max_score = int(request.cookies.get(f"{gamemode}_score", 0))
+    session["max_score"] = max_score
+    session["time"] = time
+    session["gamemode"] = gamemode
+    session["original_url"] = url
+    session.modified = True
     
-    return render_template("game.html", bigger_score = max_score, gamemode = gamemode, time=time, url=url)
+    return jsonify({"message": "This playlist is beeing processed", "task_id": id})  
 
 
     
 @app.route("/custom", methods=["POST"])
 def custom():    
-    time = request.form.get("time")
-    url = request.form.get("url")
-    
-    if not url or not time:
-        flash("All fields must be filled.")
-        return redirect("/gamemodes")
+    data = request.get_json()
+    if not data:
+        return jsonify({"status": "error", "message": "Invalid request."}), 400
+
+    url = data.get("url")
+    time_str = data.get("time")
+
+    if not url or not time_str:
+        return jsonify({"status": "error", "message": "All fields must be filled."}), 400
     
     try:
-        time = int(time)
+        time = int(time_str)
     except (ValueError, TypeError):
-        flash("The time must be a whole number (e.g., 30, 60).")
-        return redirect("/gamemodes")
+        return jsonify({"status": "error", "message": "The time must be a whole number (e.g., 30)."}), 400
 
     url = urllib.parse.unquote_plus(url)
-    
     return start_game(url, "custom", time)
 
 
@@ -208,8 +212,82 @@ def custom():
 def singleplayer():
     # default playlist for this gamemode
     playlist_url = "https://www.deezer.com/br/playlist/3155776842"
-    return start_game(playlist_url, "singleplayer", 15)
+    gamemode = "singleplayer"
+    time = 15
+    
+    tracklist = get_tracklist(playlist_url)
+    if not tracklist or len(tracklist.get("playable_tracks", [])) < 5:
+        flash("This playlist is a bit short! Please choose a playlist or album with at least 5 playable tracks.")
+        return redirect(url_for("gamemodes"))
+
+    session["tracklist"] = tracklist
+    session["score"] = 0
+    session["gamemode"] = gamemode
+    session["time"] = time
+    session.modified = True
+
+    return redirect(url_for("game_page")) 
 
 
 
 
+def process_playlist_thread(url, id):
+    TASK_STATUS[id] = "processing"
+    
+    result = get_tracklist(url)
+    
+    if result and result.get("playable_tracks"):
+        TASK_STATUS[id] = "completed"
+    else:
+        TASK_STATUS[id] = "error"
+
+
+
+
+@app.route("/task_status/<string:task_id>")
+def task_status(task_id):
+    status = TASK_STATUS.get(task_id, "not_found")
+    if status == "completed":
+        tracklist = get_playlist_in_cache(task_id)
+        
+        if not tracklist:
+            flash("Couldn't load the playlist. Please check if the link is correct and make sure the playlist is public.")
+            return redirect("/gamemodes")
+        elif len(tracklist.get("playable_tracks", [])) < 5:
+            flash("This playlist is a bit short! Please choose a playlist or album with at least 5 playable tracks.")
+            return redirect("/gamemodes")
+
+        total_tracks = tracklist.get("total_tracks", 0)
+        loaded_tracks = len(tracklist.get("options_tracks", []))
+        
+        if total_tracks > loaded_tracks and loaded_tracks > 0:
+            flash(f"Warning: This playlist is too big! The game was loaded with the first {loaded_tracks} tracks.")
+
+        session["tracklist"] = tracklist
+        session["score"] = 0
+        session.modified = True
+
+        return jsonify({
+            "status": "completed",
+            "redirect_url": url_for("game_page")
+        })
+    else:
+        return jsonify({"status": status})
+
+
+
+
+@app.route("/game")
+def game_page():
+    gamemode = session.get("gamemode", "custom")
+    time = session.get("time", 15)
+    max_score = int(request.cookies.get(f"{gamemode}_score", 0))
+    url = session.get("original_url", {})
+    
+    return render_template("game.html", bigger_score=max_score, gamemode=gamemode, time=time, url=url)
+
+
+
+
+if __name__ == "__main__":
+    app.run(debug=True)

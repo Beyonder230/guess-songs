@@ -10,7 +10,7 @@
 
     <div class="d-grid gap-4 mx-auto" style="max-width: 400px;">
         
-        <form action="/singleplayer" method="POST">
+        <form id="singleplayer-form">
             <button type="submit" class="btn btn-green w-100 btn-lg d-flex align-items-center justify-content-center">
                 <i class="fa-solid fa-user me-3"></i>
                 <span>SINGLEPLAYER</span>
@@ -61,7 +61,7 @@
     
     <h2 style="text-align: center;">CUSTOM GAMEMODE</h2>
 
-    <form id="customGameForm" action="/custom" onsubmit="return customValidation()" method="post">
+    <form id="custom-form">
         <label for="url">Playlist/Album URL:</label><br>
         <input type="text" id="url" name="url" class="w-100" placeholder="https://open.spotify.com/playlist/37i9dQZEVXbMDoHDwVN2tF?si=sWF-9j8bRsK56xv8b04LXQ" required>
         <span id="urlError"></span><br><br>

@@ -100,27 +100,36 @@ function customValidation() {
         alert("Not valid URL!!!\nPlease select a valid playlist/album link from spotify or deezer, look for share and copy link option.");
         return false;
     } else {
-        customGameLoading();
+        return true;
     }
 }
 
-function customGameLoading() {
+function showLoadingFeedback(isLoading) {
     const loadings = document.getElementsByClassName("spinner-border");
     document.getElementById("custom_game_button").classList.add("disabled");
 
-    if (loadings.length < 1) {
-        const newDiv = document.createElement("div");
-        newDiv.classList.add("spinner-border", "text-success", "d-flex", "justify-content-center", "m-3");
-        newDiv.role = "status";
+    if (isLoading) {
+        if (loadings.length < 1) {
+            const newDiv = document.createElement("div");
+            newDiv.id = "loading-spinner";
+            newDiv.classList.add("spinner-border", "text-success", "d-flex", "justify-content-center", "m-3");
+            newDiv.role = "status";
 
-        const newSpan = document.createElement("span");
-        newSpan.classList.add("visually-hidden");
-        newSpan.innerHTML = "Loading...";
+            const newSpan = document.createElement("span");
+            newSpan.classList.add("visually-hidden");
+            newSpan.innerHTML = "Loading...";
 
-        newDiv.appendChild(newSpan);
+            newDiv.appendChild(newSpan);
+
+            const loadingForm = document.getElementById("loading");
+            loadingForm.appendChild(newDiv);
+        }
+    } else {
+        document.getElementById("custom_game_button").classList.remove("disabled");
 
         const loadingForm = document.getElementById("loading");
-        loadingForm.appendChild(newDiv);
+        const spinner = document.getElementById("loading-spinner");
+        loadingForm.removeChild(spinner);
     }
 }
 
@@ -139,6 +148,106 @@ function setupAutoplay() {
         localStorage.setItem(autoplayStorageKey, isAutoplayEnabled);
     });
 }
+
+async function handleCustomGameSubmit(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const url = form.querySelector('input[name="url"]').value;
+    const time = form.querySelector('input[name="time"]').value;
+
+    showLoadingFeedback(true);
+
+    const requestBody = { url: url, time: time };
+
+    try {
+        const response = await fetch('/custom', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Fail at starting game.");
+        }
+
+        if (data.task_id) {
+            checkTaskStatus(data.task_id);
+        }
+
+    } catch (error) {
+        alert(error.message);
+        showLoadingFeedback(false);
+    }
+}
+
+function handleSingleplayerSubmit(event) {
+    event.preventDefault();
+
+    window.location.href = "/singleplayer";
+}
+
+function checkTaskStatus(taskId) {
+    if (!taskId) return;
+
+    fetch(`/task_status/${taskId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log("Status:", data.status);
+
+            if (data.status === "completed") {
+                window.location.href = data.redirect_url;
+            } else if (data.status === "error") {
+                alert(data.message || "Fail at playlist processing. Try again.");
+                showLoadingFeedback(false);
+            } else {
+                setTimeout(() => checkTaskStatus(taskId), 1000);
+            }
+        })
+        .catch(error => {
+            console.error("Error at checking status:", error);
+            showLoadingFeedback(false);
+        });
+}
+
+async function handleGameStartRequest(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const url = form.querySelector('input[name="url"]').value;
+    const time = form.querySelector('input[name="time"]').value;
+    const gamemode = form.querySelector('input[name="gamemode"]').value;
+
+    try {
+        if (gamemode === "singleplayer") {
+            window.location.href = "/singleplayer";
+        } else {
+            const requestBody = { url: url, time: time };
+
+            const response = await fetch('/custom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Fail at starting game.");
+            }
+
+            if (data.task_id) {
+                checkTaskStatus(data.task_id);
+            }
+        }
+
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
 
 // MAIN GAME LOGIC ================================================================================================================================================================
 let played = false;
@@ -583,5 +692,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (document.getElementById("autoplay-switch")) {
         setupAutoplay();
+    }
+
+    const customForm = document.getElementById('custom-form');
+    if (customForm) {
+        customForm.addEventListener('submit', handleCustomGameSubmit);
+    }
+
+    const singleplayerForm = document.getElementById('singleplayer-form');
+    if (singleplayerForm) {
+        singleplayerForm.addEventListener('submit', handleSingleplayerSubmit);
+    }
+
+    const playAgainForm = document.getElementById('play-again-form');
+    if (playAgainForm) {
+        playAgainForm.addEventListener('submit', handleGameStartRequest);
     }
 });

@@ -13,9 +13,9 @@ import random
 
 
 load_dotenv()
-deezer_id_cache = TTLCache(maxsize=10000, ttl=864000)
+deezer_id_cache = TTLCache(maxsize=2000, ttl=864000)
 spotify_token_cache = TTLCache(maxsize=1, ttl=3500)
-playlist_cache = TTLCache(maxsize=100, ttl=3600)
+playlist_cache = TTLCache(maxsize=20, ttl=600)
 
 LOCK = threading.Lock()
 
@@ -189,7 +189,7 @@ def get_spotify_tracklist(id, collection):
             
             id_counter += 1
           
-        if len(playable_tracks) >= 400:
+        if len(playable_tracks) >= 150:
             break
         
         api_url = data.get("next")
@@ -201,7 +201,7 @@ def get_spotify_tracklist(id, collection):
     used_previews = set()
     
     if tracks_without_preview:
-        batch_size = 15
+        batch_size = 50
         max_workers_per_batch = 10
         
         for i in range(0, len(tracks_without_preview), batch_size):
@@ -502,3 +502,12 @@ def get_preview_with_id(title, artist):
         return None
     
     return result
+
+
+
+
+def get_playlist_in_cache(id):
+    if id in playlist_cache:
+        return playlist_cache[id]
+    else:
+        return None

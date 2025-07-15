@@ -124,15 +124,16 @@
         <div class="d-flex flex-column align-items-center gap-3 mb-3">
     
             <div class="w-75">
-                <form action="/{{gamemode}}" method="POST">
+                <form id="play-again-form">
                     <input type="hidden" name="url" value="{{url}}">
                     <input type="hidden" name="time" value="{{time}}">
-                    <button id="play_again_button" type="submit" class="btn w-100 text-white">
+                    <input type="hidden" name="gamemode" value="{{gamemode}}">
+                    <button id="playagain_button" type="submit" class="btn w-100 text-white">
                         PLAY AGAIN
                     </button>
                 </form>
             </div>
-    
+
             <div class="w-75">
                 <form action="/gamemodes" method="get">
                     <button id="return_button" type="submit" class="btn w-100 text-white">
@@ -140,7 +141,8 @@
                     </button>
                 </form>
             </div>
-    
+
+            <div id="loading" class="d-flex justify-content-center m-3"></div>
         </div>
     </div>
 
