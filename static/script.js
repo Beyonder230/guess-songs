@@ -203,7 +203,7 @@ function checkTaskStatus(taskId) {
                 alert(data.message || "Fail at playlist processing. Try again.");
                 showLoadingFeedback(false);
             } else {
-                setTimeout(() => checkTaskStatus(taskId), 1000);
+                setTimeout(() => checkTaskStatus(taskId), 2000);
             }
         })
         .catch(error => {
